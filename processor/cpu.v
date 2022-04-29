@@ -20,7 +20,7 @@ endmodule
 
 
 
-module main();
+module bythoven();
 
     wire clkOut;
     clock myclock(clkOut);
@@ -52,8 +52,6 @@ module main();
 
 
 
-
-
     initial begin
         $dumpfile("cpu.vcd");
         $dumpvars(0,main);
@@ -62,10 +60,11 @@ module main();
     initial begin
         $readmemh("mem.hex",mem);
     end
-
+/*
     initial begin
         $readmemh("regs.hex",regs);
     end
+	 */
 
 endmodule
 
