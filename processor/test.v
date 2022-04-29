@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 module test (
 input wire clk, // 50MHz input clock
@@ -44,3 +45,11 @@ assign speaker2 = freq;
 assign LED = LEDfreq;
 
 endmodule
+=======
+input [9:0] SW; //Input Declarations: 10 slide switches
+output [9:0] LEDR; //Output Declarations: 10 red LED lights
+
+assign LEDR[7:0] = SW[7:0];
+assign LEDR[8] = 1;
+assign LEDR[9] = 0;
+>>>>>>> 3c5eb237408dd1426611cdfe0ea8f002986b52ab
