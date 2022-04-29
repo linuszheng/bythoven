@@ -35,7 +35,7 @@ module main();
     wire [9:0]raddr;                        // 10 bits (2^10=1024)
     wire isUndefined;
 
-    wire isSingleNote = curIns[30:23] == 8'00000000;
+    wire isSingleNote = curIns[30:23] == 8'b00000000;
     
     integer i;
 
