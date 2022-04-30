@@ -1,71 +1,63 @@
-`timescale 1ps/1ps
 
 
+module cpu (
+    input wire clk, // 50MHz input clock
 
+    output wire sram_WE,
+    output wire sram_CE,
+    output wire sram_OE,
+    output wire sram_LB,
+    output wire sram_UB,
+    output wire [17:0] sram_addr;
+    input wire [15:0] sram_io;
 
+    output wire speaker,
+    output wire speaker2,
+    output wire speakerBoth,
+    output wire LED,
+    output wire LED2
+);
 
-module clock(output clkOut);
-    reg clock = 0;
-    assign clkOut = clock;
+    reg [31:0] cnt = 0;
+    reg [31:0] cnt2 = 0;
+    reg freq = 0;
+    reg freq2 = 0;
+    reg [31:0] LEDcnt = 0;
+    reg [31:0] LEDcnt2 = 0;
+    reg LEDfreq = 1;
+    reg LEDfreq2 = 1;
 
-    always begin
-        #500;
-        clock <= !clock;
+    always @(posedge clk) begin
+        if(cnt == 113636)
+            cnt <= 0;
+        else
+            cnt <= cnt+1;
+            
+        if(cnt2 == 160706)
+            cnt2 <= 0;
+        else
+            cnt2 <= cnt2+1;
     end
-endmodule
+
+    assign f1 = cnt > 113636/128*127;
+    assign f2 = cnt > 113636/4*3;
+
+    assign speaker = f1;
+    assign speaker2 = f2;
+    assign speakerBoth = f1 | f2;
+    assign LED = LEDfreq;
+    assign LED2 = LEDfreq2;
 
 
 
 
-
-
-
-module bythoven();
-
-    wire clkOut;
-    clock myclock(clkOut);
-
-    reg [63:0]regs[0:31];                   // 64 bits * 31 regs
-    reg [7:0]mem[0:1023];                   // 8 bits (1 byte) * 1024 = 32 bits (1 word) * 64
-
-    reg [63:0]pc = 64'h0000000000000000;    // 16 * 4 = 64
-    wire [7:0]rdata = mem[raddr];           // 8 bits
-    reg [31:0]curIns = 32'h00000000;
-
-    wire [9:0]raddr;                        // 10 bits (2^10=1024)
-    wire isUndefined;
-
-    wire isSingleNote = curIns[30:23] == 8'b00000000;
+    // sram stuff
+    assign sram_WE = 1;
+    assign sram_CE = 0;
+    assign sram_OE = 0;
+    assign sram_LB = 0;
+    assign sram_UB = 0;
     
-    integer i;
 
-    // debugging
-    reg[5:0] emergencyCounter = 0;
-
-
-
-
-    always @(posedge clkOut) begin
-        emergencyCounter <= emergencyCounter + 1;
-    end
-
-
-
-
-    initial begin
-        $dumpfile("cpu.vcd");
-        $dumpvars(0,main);
-    end
-
-    initial begin
-        $readmemh("mem.hex",mem);
-    end
-/*
-    initial begin
-        $readmemh("regs.hex",regs);
-    end
-	 */
 
 endmodule
-
-
