@@ -1,34 +1,51 @@
-<<<<<<< HEAD
 
 module test (
 input wire clk, // 50MHz input clock
 output wire speaker,
 output wire speaker2,
-output wire LED
+output wire speakerBoth,
+output wire LED,
+output wire LED2
 );
 
-reg [31:0] cnt;
-reg freq;
-reg [31:0] LEDcnt;
-reg LEDfreq;
-
+reg [31:0] cnt = 0;
+reg [31:0] cnt2 = 0;
+reg freq = 0;
+reg freq2 = 0;
+reg [31:0] LEDcnt = 0;
+reg [31:0] LEDcnt2 = 0;
+reg LEDfreq = 1;
+reg LEDfreq2 = 1;
+/*
 initial begin
 	cnt <= 32'h00000000;
+	cnt2 <= 32'h00000000;
 	freq <= 0;
+	freq2 <= 0;
 	LEDcnt <= 0;
 	LEDfreq <= 0;
 end
+*/
 always @(posedge clk) begin
-	if(cnt == 113636/2)
+	if(cnt == 113636)
 		cnt <= 0;
 	else
 		cnt <= cnt+1;
+		
+	if(cnt2 == 160706)
+		cnt2 <= 0;
+	else
+		cnt2 <= cnt2+1;
 end
 
+/*
 always @(posedge clk) begin
 	if(cnt == 0)
 		freq <= ~freq;
+	if(cnt2 == 0)
+		freq2 <= ~freq2;
 end
+
 
 always @(posedge clk) begin
 	if(LEDcnt == 440) begin
@@ -38,18 +55,23 @@ always @(posedge clk) begin
 	else if(cnt == 0)
 		LEDcnt <= LEDcnt+1;
 
+	if(LEDcnt2 == 311) begin
+		LEDfreq2 <= ~LEDfreq2;
+		LEDcnt2 <= 0;
+	end
+	else if(cnt2 == 0)
+		LEDcnt2 <= LEDcnt2+1;
 end
 
-assign speaker = freq;
-assign speaker2 = freq;
+*/
+
+assign f1 = cnt > 113636/128*127;
+assign f2 = cnt > 113636/4*3;
+
+assign speaker = f1;
+assign speaker2 = f2;
+assign speakerBoth = f1 | f2;
 assign LED = LEDfreq;
+assign LED2 = LEDfreq2;
 
 endmodule
-=======
-input [9:0] SW; //Input Declarations: 10 slide switches
-output [9:0] LEDR; //Output Declarations: 10 red LED lights
-
-assign LEDR[7:0] = SW[7:0];
-assign LEDR[8] = 1;
-assign LEDR[9] = 0;
->>>>>>> 3c5eb237408dd1426611cdfe0ea8f002986b52ab
