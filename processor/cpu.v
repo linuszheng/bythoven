@@ -10,13 +10,13 @@ module cpu (
     output wire sram_OE,
     output wire sram_LB,
     output wire sram_UB,
-    output wire [17:0] sram_addr;
-    input wire [15:0] sram_io;
+    output wire [17:0] SRAM_A,
+    input wire [15:0] SRAM_D,
 
     // hardware
     output wire speaker,
-    output wire LED,
-    output wire LED2
+    output wire [9:0] LED_R,
+    output wire [7:0] LED_G
 );
 
     // reg [31:0] cnt = 0;
@@ -52,21 +52,20 @@ module cpu (
 
 
     wire [19:0] freq;
-    freqCalc(note, 0, freq);
+    // freqCalc(note, 0, freq);
 
 
 
 
     // m
-    integer bpm = 96;
-    integer cyclesPerBeat = 60 * 50000000 / bpm;
+    wire [63:0] bpm = 96;
+    wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
 
     reg [15:0] curIns;
     reg [17:0] sram_addr_reg;
     reg [31:0] counter = 0;
 
-    assign LED = curIns[0];
-    assign LED2 = curIns[1];
+    assign LED_R[0] = curIns[0];
 
 
     // sram stuff
@@ -76,15 +75,17 @@ module cpu (
     assign sram_OE = 0;
     assign sram_LB = 0;
     assign sram_UB = 0;
-    assign sram_addr = sram_addr_reg;
+    assign SRAM_A = sram_addr_reg;
+
+    reg [17:0] pc = 18'b000000000000000000;
 
     // get next instructions
     always @(posedge clk) begin
         if(counter % cyclesPerBeat == 1) begin
-            sram_addr_reg <= 0'b000000000000000000;
+            sram_addr_reg <= pc;
         end
         if(counter % cyclesPerBeat == 3) begin
-            curIns <= sram_io;
+            curIns <= SRAM_D;
         end
         // if(curIns[0] == 1) begin
         //     // note
@@ -94,6 +95,7 @@ module cpu (
         // end
         if(counter % cyclesPerBeat == 0) begin
             counter = 0;
+            pc <= pc+1;
         end
         counter <= counter+1;
     end

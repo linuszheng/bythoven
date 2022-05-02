@@ -18,7 +18,7 @@ module freqCalc(input[3:0] note, input octave[1:0], output[19:0] freq);
 
     integer freqArr[11:0];
 
-    // octaves: c3 to c7
+    // octaves: c3 to b6
     // = 4 octaves = 48 notes
     initial begin
         freqArr[0] = c3;
