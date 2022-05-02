@@ -1,6 +1,7 @@
 #include <array>
 #include <cstdint>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -11,7 +12,6 @@ void compile_file(std::string file_name);
 std::array<std::uint8_t, 2> process_token(std::string token);
 
 int main(int argc, char **argv) {
-    std::cout << argc << std::endl;
     if (argc <= 1) {
         std::cerr << "Usage: ./compiler <file>" << std::endl;
         return 1;
@@ -45,11 +45,17 @@ void compile_file(std::string file_name) {
         }
     }
 
-    std::cout << std::hex;
+    std::ios old_config(nullptr);
+    old_config.copyfmt(std::cout);
+
+    std::cout << "@0" << std::endl;
+
+    std::cout << std::hex << std::setfill('0');
     for (auto byte : output_bytes) {
-        std::cout << byte << '\n';
+        std::cout << std::setw(2) << static_cast<uint16_t>(byte) << std::endl;
     }
-    std::cout << std::dec;
+
+    std::cout.copyfmt(old_config);
 }
 
 std::array<std::uint8_t, 2> process_token(std::string token) {
@@ -88,5 +94,5 @@ std::array<std::uint8_t, 2> process_token(std::string token) {
     instr += 1 << 15;              // bit 15 is 1 if it is a note
 
     std::uint16_t eight_bits = 1 << 8;
-    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)}; 
+    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr >> 8)}; 
 }
