@@ -51,14 +51,10 @@ module cpu (
 
 
 
-    // sram stuff
-    wire readSram;
-    assign sram_WE = 1;
-    assign sram_CE = 0;
-    assign sram_OE = 0;
-    assign sram_LB = 0;
-    assign sram_UB = 0;
-    assign sram_addr = sram_addr_reg;
+    wire [19:0] freq;
+    freqCalc(note, 0, freq);
+
+
 
 
     // m
@@ -72,23 +68,31 @@ module cpu (
     assign LED = curIns[0];
     assign LED2 = curIns[1];
 
-    reg firstIns = 1;
-    // get first instruction
-    always @(posedge clk) begin
-        if(firstIns) begin
-            sram_addr_reg <= 0'b000000000000000000;
-            firstIns <= 0;
-        end
-        if(counter == 2) begin
-            curIns <= sram_io;
-        end
-        counter <= counter+1;
-    end
+
+    // sram stuff
+    wire readSram;
+    assign sram_WE = 1;
+    assign sram_CE = 0;
+    assign sram_OE = 0;
+    assign sram_LB = 0;
+    assign sram_UB = 0;
+    assign sram_addr = sram_addr_reg;
+
     // get next instructions
     always @(posedge clk) begin
-        if(counter % 2 == 3) begin
-            
+        if(counter % cyclesPerBeat == 1) begin
+            sram_addr_reg <= 0'b000000000000000000;
         end
+        if(counter % cyclesPerBeat == 3) begin
+            curIns <= sram_io;
+        end
+        if(curIns[0] == 1) begin
+            // note
+        end
+        else begin
+            // setting
+        end
+        counter <= counter+1;
     end
 
     
