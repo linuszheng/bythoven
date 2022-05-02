@@ -50,11 +50,9 @@ void compile_file(std::string file_name) {
     std::ios old_config(nullptr);
     old_config.copyfmt(std::cout);
 
-    std::cout << "@0" << std::endl;
-
     std::cout << std::hex << std::setfill('0');
     for (auto byte : output_bytes) {
-        std::cout << std::setw(2) << static_cast<uint16_t>(byte) << std::endl;
+        std::cout << std::setw(2) << static_cast<uint16_t>(byte);
     }
 
     std::cout.copyfmt(old_config);
