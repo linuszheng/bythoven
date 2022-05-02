@@ -1,3 +1,7 @@
+set_instance_assignment -name IO_STANDARD "3.3 V" -to CLK
+
+set_instance_assignment -name IO_STANDARD "3.3 V" -to SPEAKER
+
 set_instance_assignment -name IO_STANDARD "3.3 V" -to SRAM_A[0]
 set_instance_assignment -name IO_STANDARD "3.3 V" -to SRAM_A[1]
 set_instance_assignment -name IO_STANDARD "3.3 V" -to SRAM_A[2]
@@ -59,6 +63,10 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_G[4]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_G[5]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_G[6]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_G[7]
+
+set_location_assignment PIN_R20 -to CLK
+
+set_location_assignment PIN_D26 -to SPEAKER
 
 set_location_assignment PIN_B25 -to SRAM_A[0]
 set_location_assignment PIN_B26 -to SRAM_A[1]
