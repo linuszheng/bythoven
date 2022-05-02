@@ -9,7 +9,9 @@
 #include <vector>
 
 void compile_file(std::string file_name);
-std::array<std::uint8_t, 2> process_token(std::string token);
+std::array<std::uint8_t, 2> process_token(std::istream &cin, std::string token);
+std::array<std::uint8_t, 2> process_note(std::string token);
+std::array<std::uint8_t, 2> process_end();
 
 int main(int argc, char **argv) {
     if (argc <= 1) {
@@ -34,7 +36,7 @@ void compile_file(std::string file_name) {
         std::stringstream ss(current_line);
         try {
             while (ss >> token) {
-                for (auto byte : process_token(token)) {
+                for (auto byte : process_token(std::cin, token)) {
                     output_bytes.push_back(byte);
                 }
             }
@@ -58,7 +60,19 @@ void compile_file(std::string file_name) {
     std::cout.copyfmt(old_config);
 }
 
-std::array<std::uint8_t, 2> process_token(std::string token) {
+std::array<std::uint8_t, 2> process_token(std::istream &cin, std::string token) {
+    if (token == "end") {
+        return process_end();
+    } else {
+        return process_note(token);
+    }
+}
+
+std::array<std::uint8_t, 2> process_end() {
+    return {0x00, 0x00};
+}
+
+std::array<std::uint8_t, 2> process_note(std::string token) {
     std::vector<std::vector<std::string>> notes = {
         { "A" },
         { "A#", "Bb" },
