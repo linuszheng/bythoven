@@ -86,11 +86,14 @@ module cpu (
         if(counter % cyclesPerBeat == 3) begin
             curIns <= sram_io;
         end
-        if(curIns[0] == 1) begin
-            // note
-        end
-        else begin
-            // setting
+        // if(curIns[0] == 1) begin
+        //     // note
+        // end
+        // else begin
+        //     // setting
+        // end
+        if(counter % cyclesPerBeat == 0) begin
+            counter = 0;
         end
         counter <= counter+1;
     end
