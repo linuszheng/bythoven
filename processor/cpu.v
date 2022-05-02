@@ -2,7 +2,7 @@
 
 module cpu (
      // 50MHz input clock
-    input wire clk,
+    input wire CLK,
 
     // SRAM
     output wire SRAM_WE,
@@ -14,7 +14,7 @@ module cpu (
     input wire [15:0] SRAM_D,
 
     // hardware
-    output wire speaker,
+    output wire SPEAKER,
     output wire [9:0] LED_R,
     output wire [7:0] LED_G
 );
@@ -65,7 +65,7 @@ module cpu (
     reg [17:0] sram_addr_reg;
     reg [31:0] counter = 0;
 
-    assign LED_R[0] = curIns[0];
+    assign LED_R[0] = curIns[15];
 
 
     // sram stuff
@@ -80,14 +80,13 @@ module cpu (
     reg [17:0] pc = 18'b000000000000000000;
 
     // get next instructions
-    always @(posedge clk) begin
+    always @(posedge CLK) begin
         if(counter % cyclesPerBeat == 1) begin
             sram_addr_reg <= pc;
         end
         if(counter % cyclesPerBeat == 3) begin
             curIns <= SRAM_D;
             pc <= pc+1;
-
         end
         // if(curIns[0] == 1) begin
         //     // note
