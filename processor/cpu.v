@@ -5,11 +5,11 @@ module cpu (
     input wire clk,
 
     // SRAM
-    output wire sram_WE,
-    output wire sram_CE,
-    output wire sram_OE,
-    output wire sram_LB,
-    output wire sram_UB,
+    output wire SRAM_WE,
+    output wire SRAM_CE,
+    output wire SRAM_OE,
+    output wire SRAM_LB,
+    output wire SRAM_UB,
     output wire [17:0] SRAM_A,
     input wire [15:0] SRAM_D,
 
@@ -70,11 +70,11 @@ module cpu (
 
     // sram stuff
     wire readSram;
-    assign sram_WE = 1;
-    assign sram_CE = 0;
-    assign sram_OE = 0;
-    assign sram_LB = 0;
-    assign sram_UB = 0;
+    assign SRAM_WE = 1;
+    assign SRAM_CE = 0;
+    assign SRAM_OE = 0;
+    assign SRAM_LB = 0;
+    assign SRAM_UB = 0;
     assign SRAM_A = sram_addr_reg;
 
     reg [17:0] pc = 18'b000000000000000000;
@@ -86,6 +86,8 @@ module cpu (
         end
         if(counter % cyclesPerBeat == 3) begin
             curIns <= SRAM_D;
+            pc <= pc+1;
+
         end
         // if(curIns[0] == 1) begin
         //     // note
@@ -93,10 +95,6 @@ module cpu (
         // else begin
         //     // setting
         // end
-        if(counter % cyclesPerBeat == 0) begin
-            counter = 0;
-            pc <= pc+1;
-        end
         counter <= counter+1;
     end
 
