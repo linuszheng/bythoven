@@ -51,21 +51,37 @@ module cpu (
 
 
 
+
+
+    // calculate freq from note
     wire [19:0] freq;
     wire [3:0] note = curIns[3:0];
     freqCalc fc (note, 0, freq);
 
 
-
-    // m
+    // calculate cycles
     wire [63:0] bpm = 96;
     wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
 
     reg [15:0] curIns;
     reg [17:0] sram_addr_reg;
-    reg [31:0] counter = 0;
+    reg [31:0] cycleCounter = 0;
 
     assign LED_R[0] = curIns[15];
+
+
+    // speaker
+    reg [31:0] freqCur = 0;
+    reg [31:0] freqCounter = 0;
+    assign SPEAKER = freqCounter > freqCur/2;
+
+    always @(posedge CLK) begin
+        if(freqCounter == freqCur) begin
+            freqCounter <= 0;
+        end else begin
+            freqCounter <= freqCounter+1;
+        end
+    end
 
 
     // sram stuff
@@ -79,28 +95,22 @@ module cpu (
 
     reg [17:0] pc = 18'b000000000000000000;
 
-    reg [31:0] freqCur = 0;
-    reg [31:0] freqCounter = 0;
-    assign SPEAKER = freqCounter > freqCur/2;
-
-    always @(posedge CLK) begin
-        if(freqCounter == freqCur) begin
-            freqCounter = 0;
-        end
-        freqCounter <= freqCounter+1;
-    end
 
     // get next instructions
     always @(posedge CLK) begin
-        if(counter == 1) begin
+        if(cycleCounter == 1) begin
             sram_addr_reg <= pc;
         end
-        if(counter == 3) begin
+        if(cycleCounter == 3) begin
             curIns <= SRAM_D;
             pc <= pc+1;
         end
-        if(counter == cyclesPerBeat) begin
-            counter <= 0;
+        if(cycleCounter == cyclesPerBeat-1) begin
+            cycleCounter <= 0;
+            freqCur <= freq;
+        end
+        else begin
+            cycleCounter <= cycleCounter+1;
         end
         // if(curIns[0] == 1) begin
         //     // note
@@ -108,7 +118,6 @@ module cpu (
         // else begin
         //     // setting
         // end
-        counter <= counter+1;
     end
 
     
