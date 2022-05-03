@@ -34,8 +34,6 @@ module cpu (
     wire [63:0] bpm = 30;
     wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
 
-	//debug LED
-    assign LED_R[0] = curIns[15];
 
 
     // speaker
@@ -43,6 +41,7 @@ module cpu (
     reg [31:0] freqCounter = 0;
     reg isPlayingNote = curIns[0];
     assign SPEAKER = isPlayingNote ? (freqCounter >= freqCur/2) : 0;
+    
 
     always @(posedge CLK) begin
         if(freqCounter >= freqCur) begin
@@ -51,6 +50,9 @@ module cpu (
             freqCounter <= freqCounter+1;
         end
     end
+    
+	//debug LED
+    assign LED_R[0] = isPlayingNote;
 
 
     // sram stuff
