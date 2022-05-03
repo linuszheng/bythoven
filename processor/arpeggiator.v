@@ -7,8 +7,7 @@
 module arpeggiator (
 input wire CLK, // 50MHz input clock
 output wire SPEAKER,
-output wire LED1,
-output wire LED2
+output wire [7:0] LED_G
 );
 
 reg [31:0]cnt = 0;
@@ -36,7 +35,7 @@ end
 
 assign SPEAKER = cnt > pitch/2;
 
-assign LED1 = LEDfreq1;
-assign LED2 = LEDfreq2;
+assign LED_G[0] = LEDfreq1;
+assign LED_G[1] = LEDfreq2;
 
 endmodule

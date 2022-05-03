@@ -52,8 +52,8 @@ module cpu (
 
 
     wire [19:0] freq;
-    // freqCalc(note, 0, freq);
-
+    wire [3:0] note = curIns[3:0];
+    freqCalc fc (note, 0, freq);
 
 
 
@@ -79,14 +79,28 @@ module cpu (
 
     reg [17:0] pc = 18'b000000000000000000;
 
+    reg [31:0] freqCur = 0;
+    reg [31:0] freqCounter = 0;
+    assign SPEAKER = freqCounter > freqCur/2;
+
+    always @(posedge CLK) begin
+        if(freqCounter == freqCur) begin
+            freqCounter = 0;
+        end
+        freqCounter <= freqCounter+1;
+    end
+
     // get next instructions
     always @(posedge CLK) begin
-        if(counter % cyclesPerBeat == 1) begin
+        if(counter == 1) begin
             sram_addr_reg <= pc;
         end
-        if(counter % cyclesPerBeat == 3) begin
+        if(counter == 3) begin
             curIns <= SRAM_D;
             pc <= pc+1;
+        end
+        if(counter == cyclesPerBeat) begin
+            counter <= 0;
         end
         // if(curIns[0] == 1) begin
         //     // note
