@@ -4,16 +4,16 @@
 `define A3 227272
 
 
-module test (
-input wire clk, // 50MHz input clock
-output wire speaker,
-output wire LED,
+module arpeggiator (
+input wire CLK, // 50MHz input clock
+output wire SPEAKER,
+output wire LED1,
 output wire LED2
 );
 
 reg [31:0]cnt = 0;
 reg [31:0]switchcnt = 0;
-reg LEDfreq = 1;
+reg LEDfreq1 = 1;
 reg LEDfreq2 = 1;
 
 wire [31:0]pitch = switchcnt < 10000000 ? `C3/2
@@ -21,7 +21,7 @@ wire [31:0]pitch = switchcnt < 10000000 ? `C3/2
 						: switchcnt < 30000000 ? `F3
 						: `A3;
 
-always @(posedge clk) begin
+always @(posedge CLK) begin
 	if(cnt >= pitch)
 		cnt <= 0;
 	else
@@ -34,9 +34,9 @@ always @(posedge clk) begin
 end
 
 
-assign speaker = cnt > pitch/2;
+assign SPEAKER = cnt > pitch/2;
 
-assign LED = LEDfreq;
+assign LED1 = LEDfreq1;
 assign LED2 = LEDfreq2;
 
 endmodule

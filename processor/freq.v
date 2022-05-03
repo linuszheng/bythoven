@@ -1,6 +1,6 @@
 
 
-module freqCalc(input[3:0] note, input octave[1:0], output[19:0] freq);
+module freqCalc(input[3:0] note, input[1:0] octave, output[19:0] freq);
 
     // frequency x100
     integer  c3 = 13081;
