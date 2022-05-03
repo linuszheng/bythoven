@@ -1,11 +1,10 @@
 
 module test (
-input wire clk, // 50MHz input clock
-output wire speaker,
-output wire speaker2,
-output wire speakerBoth,
-output wire LED,
-output wire LED2
+input wire CLK, // 50MHz input clock
+output wire SPEAKER,
+output wire SPEAKER2,
+output wire SPEAKERBoth,
+output wire [9:0] LED_R
 );
 
 reg [31:0] cnt = 0;
@@ -14,7 +13,7 @@ reg freq = 0;
 reg freq2 = 0;
 reg [31:0] LEDcnt = 0;
 reg [31:0] LEDcnt2 = 0;
-reg LEDfreq = 1;
+reg LEDfreq1 = 1;
 reg LEDfreq2 = 1;
 /*
 initial begin
@@ -26,7 +25,7 @@ initial begin
 	LEDfreq <= 0;
 end
 */
-always @(posedge clk) begin
+always @(posedge CLK) begin
 	if(cnt == 113636)
 		cnt <= 0;
 	else
@@ -39,7 +38,7 @@ always @(posedge clk) begin
 end
 
 /*
-always @(posedge clk) begin
+always @(posedge CLK) begin
 	if(cnt == 0)
 		freq <= ~freq;
 	if(cnt2 == 0)
@@ -47,7 +46,7 @@ always @(posedge clk) begin
 end
 
 
-always @(posedge clk) begin
+always @(posedge CLK) begin
 	if(LEDcnt == 440) begin
 		LEDfreq <= ~LEDfreq;
 		LEDcnt <= 0;
@@ -68,10 +67,10 @@ end
 assign f1 = cnt > 113636/128*127;
 assign f2 = cnt > 113636/4*3;
 
-assign speaker = f1;
-assign speaker2 = f2;
-assign speakerBoth = f1 | f2;
-assign LED = LEDfreq;
-assign LED2 = LEDfreq2;
+assign SPEAKER = f1;
+assign SPEAKER2 = f2;
+assign SPEAKERBoth = f1 | f2;
+assign LED_R[0] = LEDfreq1;
+assign LED_R[1] = LEDfreq2;
 
 endmodule
