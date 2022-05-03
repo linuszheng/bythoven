@@ -35,5 +35,5 @@ module freqCalc(input[3:0] note, input[1:0] octave, output[19:0] freq);
         freqArr[11] = b3;
     end
 
-    assign freq = freqArr[note] * (2 ** octave) / 100;
+    assign freq = freqArr[note % 12] * (2 ** octave) / 100;
 endmodule

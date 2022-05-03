@@ -21,38 +21,56 @@ module cpu (
 
 
     reg [15:0] curIns;
+	 reg [15:0] nextIns;
 	 reg [17:0] sram_addr_reg;
     reg [31:0] cycleCounter = 0;
 
 
     // calculate freq from note
     wire [19:0] freq;
-    wire [3:0] note = curIns[3:0];
-    freqCalc fc (note, 0, freq);
+    wire [31:0] waves = 50000000 / freq;
+    wire [3:0] note = nextIns[3:0];
+    //freqCalc fc (note, 0, freq);
+
+
+	 assign freq =((note % 12 == 0) ? c3 :
+						(note % 12 == 1) ? cz3 :
+						(note % 12 == 2) ? d3 : 
+						(note % 12 == 3) ? dz3 : 
+						(note == 4) ? e3 : 
+						(note == 5) ? f3 : 
+						(note == 6) ? fz3 : 
+						(note == 7) ? g3 : 
+						(note == 8) ? gz3 : 
+						(note == 9) ? a3 : 
+						(note == 10) ? az3 : 
+						(note == 11) ? b3 : 0) / 100;
+	 
+	 // Debugging frequency
+	 assign LED_G[7:0] = freq[7:0];
+	 assign LED_R[9:0] = freq[9:0];
 
     // calculate cycles
-    wire [63:0] bpm = 30;
+    wire [63:0] bpm = 96;
     wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
 
-
-
     // speaker
-    reg [31:0] freqCur = 227272;
-    reg [31:0] freqCounter = 0;
-    reg isPlayingNote = curIns[0];
-    assign SPEAKER = isPlayingNote ? (freqCounter >= freqCur/2) : 0;
+    reg [31:0] wavesCur = 0;
+    reg [31:0] wavesCounter = 0;
+    wire isPlayingNote = 1;
+    assign SPEAKER = isPlayingNote ? (wavesCounter >= wavesCur/2) : 0;
     
 
     always @(posedge CLK) begin
-        if(freqCounter >= freqCur) begin
-            freqCounter <= 0;
+        if(wavesCounter >= wavesCur) begin
+            wavesCounter <= 0;
         end else begin
-            freqCounter <= freqCounter+1;
+            wavesCounter <= wavesCounter+1;
         end
     end
     
-	//debug LED
-    assign LED_R[0] = isPlayingNote;
+	 //debug LED
+    // assign LED_R[0] = isPlayingNote;
 
 
     // sram stuff
@@ -73,12 +91,13 @@ module cpu (
             sram_addr_reg <= pc;
         end
         if(cycleCounter == 3) begin
-            curIns <= SRAM_D;
+            nextIns <= SRAM_D;
             pc <= pc+1;
         end
         if(cycleCounter == cyclesPerBeat-1) begin
+				curIns <= nextIns;
             cycleCounter <= 0;
-            // freqCur <= freq;
+            wavesCur <= waves;
         end
         else begin
             cycleCounter <= cycleCounter+1;
