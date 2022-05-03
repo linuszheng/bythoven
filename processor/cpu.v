@@ -31,7 +31,7 @@ module cpu (
     freqCalc fc (note, 0, freq);
 
     // calculate cycles
-    wire [63:0] bpm = 96;
+    wire [63:0] bpm = 30;
     wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
 
 	//debug LED
@@ -39,9 +39,10 @@ module cpu (
 
 
     // speaker
-    reg [31:0] freqCur = 0;
+    reg [31:0] freqCur = 227272;
     reg [31:0] freqCounter = 0;
-    assign SPEAKER = freqCounter > freqCur/2;
+    reg isPlayingNote = curIns[0];
+    assign SPEAKER = isPlayingNote ? (freqCounter >= freqCur/2) : 0;
 
     always @(posedge CLK) begin
         if(freqCounter >= freqCur) begin
@@ -75,17 +76,11 @@ module cpu (
         end
         if(cycleCounter == cyclesPerBeat-1) begin
             cycleCounter <= 0;
-            freqCur <= freq;
+            // freqCur <= freq;
         end
         else begin
             cycleCounter <= cycleCounter+1;
         end
-        // if(curIns[0] == 1) begin
-        //     // note
-        // end
-        // else begin
-        //     // setting
-        // end
     end
 
     
