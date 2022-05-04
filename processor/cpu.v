@@ -34,30 +34,38 @@ module cpu (
     wire [3:0] note = curIns[3:0];
 	 wire [1:0] octave = curIns[5:4];
 	 wire [31:0] waves = 50000000 / freq;
+    wire [2:0] volume = curIns[7:6]+1;
 
     freqCalc fc (note, octave, freq, isValidFreq);
+
+
+    // instruction decoding
+    wire insIsNote = curIns[15];
+    wire insIsEnd = curIns[15:12] == 4'b0000;
+    wire insIsBpm = curIns[15:12] == 4'b0001;
+
+
 	
 	 // debugging frequency
 	 assign LED_G[3:0] = note;
 	 assign LED_R[9:0] = note+12*octave;
 
     // calculate cycles
-    wire [63:0] bpm = 96;
+    reg [63:0] bpm = 96;
     wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
 	 wire [63:0] noteCycles;
 	 wire [3:0] length = curIns[11:8];
 	 lengthCalc lc (length, cyclesPerBeat, noteCycles);
 
     // speaker
-    reg [31:0] wavesCur = 0;
     reg [31:0] wavesCounter = 0;
 														// adds a slight pause between notes
-    wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 5000000;
-    assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur/4) : 0;
+    wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 2000000;
+    assign SPEAKER = isPlayingNote ? (wavesCounter > waves/4) : 0;
     
 	 // counter for playing a frequency
     always @(posedge CLK) begin
-        if(wavesCounter >= wavesCur) begin
+        if(wavesCounter >= waves) begin
             wavesCounter <= 0;
         end else begin
             wavesCounter <= wavesCounter+1;
@@ -77,6 +85,8 @@ module cpu (
     reg [17:0] pc = 18'b000000000000000000;
 
 
+	 reg firstInstruction = 1;
+	 
     // get next instructions
     always @(posedge CLK) begin
         if(cycleCounter == 1) begin
@@ -86,10 +96,14 @@ module cpu (
             nextIns <= SRAM_D;
             pc <= pc+1;
         end
-        if(cycleCounter == noteCycles-1) begin
+		  if(firstInstruction && cycleCounter == 5) begin
+				curIns <= nextIns;
+				cycleCounter <= 0;
+				firstInstruction <= 0;
+		  end
+        else if(!firstInstruction && cycleCounter == noteCycles) begin
 				curIns <= nextIns;
             cycleCounter <= 0;
-            wavesCur <= waves;
         end
         else begin
             cycleCounter <= cycleCounter+1;
