@@ -31,38 +31,11 @@ module cpu (
     wire [31:0] waves = 50000000 / freq;
     wire [3:0] note = curIns[3:0];
 	 wire [1:0] octave = curIns[5:4];
-    // freqCalc fc (note, 0, freq);
-	 
-	 // frequencies x100
-	 integer  c3 = 13081;
-    integer cz3 = 13859;
-    integer  d3 = 14683;
-    integer dz3 = 15556;
-    integer  e3 = 16481;
-    integer  f3 = 17461;
-    integer fz3 = 18500;
-    integer  g3 = 19600;
-    integer gz3 = 20765;
-    integer  a3 = 22000;
-    integer az3 = 23308;
-    integer  b3 = 24694;
-
-	 assign freq =((note % 12 == 0) ? c3 :
-						(note % 12 == 1) ? cz3 :
-						(note % 12 == 2) ? d3 : 
-						(note % 12 == 3) ? dz3 : 
-						(note == 4) ? e3 : 
-						(note == 5) ? f3 : 
-						(note == 6) ? fz3 : 
-						(note == 7) ? g3 : 
-						(note == 8) ? gz3 : 
-						(note == 9) ? a3 : 
-						(note == 10) ? az3 : 
-						(note == 11) ? b3 : 0) * (2 ** octave) / 100;
-	 
+    freqCalc fc (note, octave, freq);
+	
 	 // Debugging frequency
-	 assign LED_G[7:0] = freq[7:0];
-	 assign LED_R[9:0] = freq[9:0];
+	 assign LED_G[3:0] = note;
+	 assign LED_R[9:0] = note+12*octave;
 
     // calculate cycles
     wire [63:0] bpm = 96;
@@ -72,7 +45,7 @@ module cpu (
     reg [31:0] wavesCur = 0;
     reg [31:0] wavesCounter = 0;
     wire isPlayingNote = 1;
-    assign SPEAKER = isPlayingNote ? (wavesCounter >= wavesCur/2) : 0;
+    assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur*1/4) : 0;
     
 
     always @(posedge CLK) begin
