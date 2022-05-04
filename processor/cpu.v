@@ -29,7 +29,8 @@ module cpu (
     // calculate freq from note
     wire [19:0] freq;
     wire [31:0] waves = 50000000 / freq;
-    wire [3:0] note = nextIns[3:0];
+    wire [3:0] note = curIns[3:0];
+	 wire [1:0] octave = curIns[5:4];
     // freqCalc fc (note, 0, freq);
 	 
 	 // frequencies x100
@@ -57,7 +58,7 @@ module cpu (
 						(note == 8) ? gz3 : 
 						(note == 9) ? a3 : 
 						(note == 10) ? az3 : 
-						(note == 11) ? b3 : 0) / 100;
+						(note == 11) ? b3 : 0) * (2 ** octave) / 100;
 	 
 	 // Debugging frequency
 	 assign LED_G[7:0] = freq[7:0];
