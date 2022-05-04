@@ -4,6 +4,8 @@
 
 #include "fraction.h"
 
+Fraction::Fraction() : Fraction(0, 1) {}
+
 Fraction::Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {
     int gcd = std::gcd(numerator, denominator);
     numerator /= gcd;
@@ -41,7 +43,7 @@ std::istream &operator>>(std::istream &in, Fraction &fraction) {
     return in;
 }
 
-std::vector<int> split_note(Fraction total) {
+int get_fraction_index(Fraction total) {
     auto it = std::find_if(NOTE_DENOMINATORS.begin(), NOTE_DENOMINATORS.end(),
                            [total](int denom) { return total.get_denominator() == denom; });
 
@@ -50,5 +52,5 @@ std::vector<int> split_note(Fraction total) {
         throw 1;
     }
 
-    return {static_cast<int>(it - NOTE_DENOMINATORS.begin())};
+    return static_cast<int>(it - NOTE_DENOMINATORS.begin());
 }

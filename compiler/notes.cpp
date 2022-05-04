@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "fraction.h"
+
 const static std::array<std::vector<std::string>, 12> NOTES = {
     std::vector<std::string>{ "B#", "C" },
     std::vector<std::string>{ "C#", "Db" },
@@ -32,7 +34,7 @@ constexpr static int OPCODE_SHIFT = 15;
 
 static int get_note(std::string token);
 static int get_octave(std::istream &in);
-/* static int get_duration(std::istream &in); */
+static int get_duration(std::istream &in);
 
 int get_note(std::string token) {
     auto check = [&token](const auto &options) { 
@@ -62,11 +64,19 @@ int get_octave(std::istream &in) {
     return octave - MIN_OCTAVE;
 }
 
+int get_duration(std::istream &in) {
+    Fraction length;
+    in >> length;
+
+    int note_idx = get_fraction_index(length);
+    return note_idx;
+}
+
 std::array<std::uint8_t, 2> process_note(std::istream &in, std::string token) {
     int note = get_note(token);
     int octave = get_octave(in);
     int volume = 2;
-    int length = 3;;
+    int length = get_duration(in);
     int style = 0;
     int opcode = 1;
 

@@ -11,6 +11,7 @@ private:
     int denominator;
 
 public:
+    Fraction();
     Fraction(int numerator, int denominator);
     bool operator==(Fraction other) const;
     bool operator<(Fraction other) const;
@@ -19,4 +20,4 @@ public:
     friend std::istream &operator>>(std::istream &in, Fraction &fraction);
 };
 
-std::vector<int> split_note(Fraction total);
+int get_fraction_index(Fraction total);
