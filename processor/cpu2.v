@@ -24,26 +24,51 @@ module cpu (
     wire [31:0] _CYCLES_PER_SEC = 50000000;
 
 
+    // SRAM
+    wire readSram;
+    assign SRAM_WE = 1;
+    assign SRAM_CE = 0;
+    assign SRAM_OE = 0;
+    assign SRAM_LB = 0;
+    assign SRAM_UB = 0;
+    assign SRAM_A = sram_addr_reg;
+
+    reg sramAddrReg = 0;
+
+
+
+    // FW
+    reg [17:0] FW_pc = 0;
+    reg [15:0] FW_ins = 0;
+    reg FW_isNote = W_ins[0] == 1;
+    reg [1:0] FW_volume = 0;
+    reg FW_shouldGetIns = !FW_isNote;
+
+
 
     // -----------------------------[ STAGE: FETCH    ]------------------------------
-    reg [17:0] F_pc = 0;
+    always @(posedge CLK) begin
+        if(X_cycleCounter == 0 || FW_shouldGetIns) begin
+            sramAddrReg <= FW_pc;
+        end
+    end
 
 
 
     // -----------------------------[ STAGE:  WAIT    ]-------------------------------
-    reg [15:0] W_ins = 0;
-
-    // get next instructions
     always @(posedge CLK) begin
-        if(cycleCounter == 3) begin
-            nextIns <= SRAM_D;
-            pc <= pc+1;
+        if(X_cycleCounter % 3 == 2) begin
+            FW_ins <= SRAM_D;
+            FW_pc <= FW_pc+1;
         end
     end
 
 
 
     // -----------------------------[ STAGE:  EXECUTE ]-------------------------------
+    
+    reg [31:0] X_cycleCounter = 0;
+    reg [17:0] X_pc = 0;
     reg [15:0] X_ins = 0;
     wire [3:0] X_note = X_ins[3:0];
     wire [31:0] X_soundWavesPerSec = ((X_note % 12 == 0) ? c3 :
@@ -61,6 +86,16 @@ module cpu (
     wire [31:0] X_cyclesPerSoundWave = _CYCLES_PER_SEC / X_soundWavesPerSec;
 
     reg [31:0] X_cycleCounter = 0;
+
+    always @(posedge CLK) begin
+        if(cycleCounter == 2) begin
+            nextIns <= SRAM_D;
+            pc <= pc+1;
+        end
+    end
+
+
+
 
 
 
@@ -100,14 +135,6 @@ module cpu (
     // assign LED_R[0] = isPlayingNote;
 
 
-    // sram stuff
-    wire readSram;
-    assign SRAM_WE = 1;
-    assign SRAM_CE = 0;
-    assign SRAM_OE = 0;
-    assign SRAM_LB = 0;
-    assign SRAM_UB = 0;
-    assign SRAM_A = sram_addr_reg;
     
 
 
