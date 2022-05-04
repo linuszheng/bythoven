@@ -34,10 +34,9 @@ module cpu (
     wire [3:0] note = curIns[3:0];
 	 wire [1:0] octave = curIns[5:4];
 	 wire [31:0] waves = 50000000 / freq;
-     wire [2:0] volume = curIns[7:6]+1;
+    wire [2:0] volume = curIns[7:6]+1;
 
     freqCalc fc (note, octave, freq, isValidFreq);
-
 
 
     // instruction decoding
@@ -59,16 +58,14 @@ module cpu (
 	 lengthCalc lc (length, cyclesPerBeat, noteCycles);
 
     // speaker
-    reg [31:0] wavesCur = 0;
     reg [31:0] wavesCounter = 0;
-    reg [63:0] cyclesCur = 0;
 														// adds a slight pause between notes
-    wire isPlayingNote = isValidFreq && cycleCounter < cyclesCur - 2000000;
-    assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur/4) : 0;
+    wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 2000000;
+    assign SPEAKER = isPlayingNote ? (wavesCounter > waves/4) : 0;
     
 	 // counter for playing a frequency
     always @(posedge CLK) begin
-        if(wavesCounter >= wavesCur) begin
+        if(wavesCounter >= waves) begin
             wavesCounter <= 0;
         end else begin
             wavesCounter <= wavesCounter+1;
@@ -88,6 +85,8 @@ module cpu (
     reg [17:0] pc = 18'b000000000000000000;
 
 
+	 reg firstInstruction = 1;
+	 
     // get next instructions
     always @(posedge CLK) begin
         if(cycleCounter == 1) begin
@@ -97,11 +96,14 @@ module cpu (
             nextIns <= SRAM_D;
             pc <= pc+1;
         end
-        if(cycleCounter == noteCycles-1) begin
+		  if(firstInstruction && cycleCounter == 5) begin
+				curIns <= nextIns;
+				cycleCounter <= 0;
+				firstInstruction <= 0;
+		  end
+        else if(!firstInstruction && cycleCounter == noteCycles) begin
 				curIns <= nextIns;
             cycleCounter <= 0;
-            wavesCur <= waves;
-            cyclesCur <= noteCycles;
         end
         else begin
             cycleCounter <= cycleCounter+1;
