@@ -4,11 +4,13 @@
 #include <ios>
 #include <iostream>
 #include <fstream>
+#include <optional>
 #include <string>
 #include <sstream>
 #include <vector>
 
 #include "compiler.h"
+#include "notes.h"
 
 int main(int argc, char **argv) {
     if (argc <= 1) {
@@ -33,7 +35,7 @@ void compile_file(std::string file_name) {
         std::stringstream ss(current_line);
         try {
             while (ss >> token) {
-                for (auto byte : process_token(std::cin, token)) {
+                for (auto byte : process_token(ss, token)) {
                     output_bytes.push_back(byte);
                 }
             }
@@ -42,6 +44,8 @@ void compile_file(std::string file_name) {
             std::cerr << "error on line " << line_number << std::endl;
             return;
         }
+
+        line_number++;
     }
 
     std::ios old_config(nullptr);
@@ -49,17 +53,18 @@ void compile_file(std::string file_name) {
 
     std::cout << std::hex << std::setfill('0');
     for (auto byte : output_bytes) {
+        // casting here so it is not treated as an int
         std::cout << std::setw(2) << static_cast<uint16_t>(byte);
     }
 
     std::cout.copyfmt(old_config);
 }
 
-std::array<std::uint8_t, 2> process_token(std::istream &cin, std::string token) {
+std::array<std::uint8_t, 2> process_token(std::istream &in, std::string token) {
     if (token == "end") {
         return process_end();
     } else {
-        return process_note(token);
+        return process_note(in, token);
     }
 }
 
@@ -67,39 +72,3 @@ std::array<std::uint8_t, 2> process_end() {
     return {0x00, 0x00};
 }
 
-std::array<std::uint8_t, 2> process_note(std::string token) {
-    std::vector<std::vector<std::string>> notes = {
-        { "B#", "C" },
-        { "C#", "Db" },
-        { "D" },
-        { "D#", "Eb" },
-        { "E", "Fb" },
-        { "F", "E#" },
-        { "F#", "Gb" },
-        { "G" },
-        { "G#", "Ab" },
-        { "A" },
-        { "A#", "Bb" },
-        { "B", "Cb" }
-    };
-
-    auto check = [&token](const auto &options) { 
-        return any_of(options.begin(), options.end(), [&token](const std::string &s) { 
-            return s == token; 
-        }); 
-    };
-
-    auto it = std::find_if(notes.begin(), notes.end(), check);
-
-    if (it == notes.end()) {
-        throw 0;
-    }
-
-    std::uint16_t instr = 0;
-    instr += (it - notes.begin()); // bits 3-0 represent the note
-    instr += 0b00 << 4;            // bits 6-4 represent the octave
-    instr += 1 << 15;              // bit 15 is 1 if it is a note
-
-    std::uint16_t eight_bits = 1 << 8;
-    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr >> 8)}; 
-}
