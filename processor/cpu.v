@@ -62,8 +62,8 @@ module cpu (
     reg [31:0] wavesCur = 0;
     reg [31:0] wavesCounter = 0;
 														// adds a slight pause between notes
-    wire isPlayingNote = insIsNote && isValidFreq && cycleCounter < noteCycles - 5000000;
-    assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur/16*volume) : 0;
+    wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 2000000;
+    assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur/4) : 0;
     
 	 // counter for playing a frequency
     always @(posedge CLK) begin
