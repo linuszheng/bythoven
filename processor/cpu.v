@@ -20,6 +20,7 @@ module cpu (
 );
 
 
+	 // instruction
     reg [15:0] curIns;
 	 reg [15:0] nextIns;
 	 reg [17:0] sram_addr_reg;
@@ -36,33 +37,32 @@ module cpu (
 
     freqCalc fc (note, octave, freq, isValidFreq);
 	
-	 // Debugging frequency
+	 // debugging frequency
 	 assign LED_G[3:0] = note;
 	 assign LED_R[9:0] = note+12*octave;
 
     // calculate cycles
     wire [63:0] bpm = 96;
     wire [63:0] cyclesPerBeat = 60 * 50000000 / bpm;
+	 wire [63:0] noteCycles;
+	 wire [3:0] length = curIns[11:8];
+	 lengthCalc lc (length, cyclesPerBeat, noteCycles);
 
     // speaker
     reg [31:0] wavesCur = 0;
     reg [31:0] wavesCounter = 0;
-														//slight pause between notes
-    wire isPlayingNote = isValidFreq && cycleCounter < cyclesPerBeat - 5000000;
+														// adds a slight pause between notes
+    wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 5000000;
     assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur/4) : 0;
     
-	 //counter for playing a frequency
+	 // counter for playing a frequency
     always @(posedge CLK) begin
-		  //resetting frequency counter
         if(wavesCounter >= wavesCur) begin
             wavesCounter <= 0;
         end else begin
             wavesCounter <= wavesCounter+1;
         end
     end
-    
-	 //debug LED
-    // assign LED_R[0] = isPlayingNote;
 
 
     // sram stuff
@@ -86,7 +86,7 @@ module cpu (
             nextIns <= SRAM_D;
             pc <= pc+1;
         end
-        if(cycleCounter == cyclesPerBeat-1) begin
+        if(cycleCounter == noteCycles-1) begin
 				curIns <= nextIns;
             cycleCounter <= 0;
             wavesCur <= waves;
