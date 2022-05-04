@@ -16,24 +16,16 @@ module freqCalc(input[3:0] note, input[1:0] octave, output[19:0] freq);
     integer az3 = 23308;
     integer  b3 = 24694;
 
-    integer freqArr[11:0];
-
-    // octaves: c3 to b6
-    // = 4 octaves = 48 notes
-    initial begin
-        freqArr[0] = c3;
-        freqArr[1] = cz3;
-        freqArr[2] = d3;
-        freqArr[3] = dz3;
-        freqArr[4] = e3;
-        freqArr[5] = f3;
-        freqArr[6] = fz3;
-        freqArr[7] = g3;
-        freqArr[8] = gz3;
-        freqArr[9] = a3;
-        freqArr[10] = az3;
-        freqArr[11] = b3;
-    end
-
-    assign freq = freqArr[note % 12] * (2 ** octave) / 100;
+	 assign freq =((note == 0) ? c3 :
+						(note == 1) ? cz3 :
+						(note == 2) ? d3 : 
+						(note == 3) ? dz3 : 
+						(note == 4) ? e3 : 
+						(note == 5) ? f3 : 
+						(note == 6) ? fz3 : 
+						(note == 7) ? g3 : 
+						(note == 8) ? gz3 : 
+						(note == 9) ? a3 : 
+						(note == 10) ? az3 : 
+						(note == 11) ? b3 : 0) * (2 ** octave) / 100;
 endmodule
