@@ -30,8 +30,21 @@ module cpu (
     wire [19:0] freq;
     wire [31:0] waves = 50000000 / freq;
     wire [3:0] note = nextIns[3:0];
-    //freqCalc fc (note, 0, freq);
-
+    // freqCalc fc (note, 0, freq);
+	 
+	 // frequencies x100
+	 integer  c3 = 13081;
+    integer cz3 = 13859;
+    integer  d3 = 14683;
+    integer dz3 = 15556;
+    integer  e3 = 16481;
+    integer  f3 = 17461;
+    integer fz3 = 18500;
+    integer  g3 = 19600;
+    integer gz3 = 20765;
+    integer  a3 = 22000;
+    integer az3 = 23308;
+    integer  b3 = 24694;
 
 	 assign freq =((note % 12 == 0) ? c3 :
 						(note % 12 == 1) ? cz3 :
