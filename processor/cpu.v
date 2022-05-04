@@ -28,13 +28,13 @@ module cpu (
 
     // calculate freq from note
     wire [19:0] freq;
-	 wire isValid;
+	 wire isValidFreq;
 	 
     wire [3:0] note = curIns[3:0];
 	 wire [1:0] octave = curIns[5:4];
 	 wire [31:0] waves = 50000000 / freq;
 
-    freqCalc fc (note, octave, freq, isValid);
+    freqCalc fc (note, octave, freq, isValidFreq);
 	
 	 // Debugging frequency
 	 assign LED_G[3:0] = note;
@@ -47,17 +47,14 @@ module cpu (
     // speaker
     reg [31:0] wavesCur = 0;
     reg [31:0] wavesCounter = 0;
-    wire isPlayingNote = isValid;
+														//slight pause between notes
+    wire isPlayingNote = isValidFreq && cycleCounter < cyclesPerBeat - 5000000;
     assign SPEAKER = isPlayingNote ? (wavesCounter > wavesCur/4) : 0;
     
-
 	 //counter for playing a frequency
     always @(posedge CLK) begin
-		  //slight pause between notes
-		  if(cycleCounter > cyclesPerBeat - 5000000) begin
-				wavesCounter <= 0;
 		  //resetting frequency counter
-        end else if(wavesCounter >= wavesCur) begin
+        if(wavesCounter >= wavesCur) begin
             wavesCounter <= 0;
         end else begin
             wavesCounter <= wavesCounter+1;
