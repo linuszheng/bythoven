@@ -8,10 +8,7 @@
 #include <sstream>
 #include <vector>
 
-void compile_file(std::string file_name);
-std::array<std::uint8_t, 2> process_token(std::istream &cin, std::string token);
-std::array<std::uint8_t, 2> process_note(std::string token);
-std::array<std::uint8_t, 2> process_end();
+#include "compiler.h"
 
 int main(int argc, char **argv) {
     if (argc <= 1) {
