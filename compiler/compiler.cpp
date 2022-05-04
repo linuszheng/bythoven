@@ -69,20 +69,18 @@ std::array<std::uint8_t, 2> process_end() {
 
 std::array<std::uint8_t, 2> process_note(std::string token) {
     std::vector<std::vector<std::string>> notes = {
-        { "A" },
-        { "A#", "Bb" },
-        { "B" },
-        { "B#", "Cb" },
-        { "C" },
+        { "B#", "C" },
         { "C#", "Db" },
         { "D" },
         { "D#", "Eb" },
-        { "E" },
-        { "E#", "Fb" },
-        { "F" },
+        { "E", "Fb" },
+        { "F", "E#" },
         { "F#", "Gb" },
         { "G" },
-        { "G#", "Ab" }
+        { "G#", "Ab" },
+        { "A" },
+        { "A#", "Bb" },
+        { "B", "Cb" }
     };
 
     auto check = [&token](const auto &options) { 
