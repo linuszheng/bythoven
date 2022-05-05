@@ -28,7 +28,7 @@ const std::array<std::vector<std::string>, 12> Compiler::NOTES = {
     std::vector<std::string>{ "B", "Cb" }
 };
 
-Compiler::Compiler() : cur_volume(MEZZO_FORTE) {}
+Compiler::Compiler() : cur_volume(MEZZO_FORTE), cur_style(NORMAL) {}
 
 void Compiler::compile_file(std::string file_name) {
     std::ifstream source(file_name);
@@ -78,6 +78,12 @@ std::optional<std::array<std::uint8_t, 2>> Compiler::process_token(std::istream 
         return process_end();
     } else if (token == "bpm") {
         return process_bpm(in);
+    } else if (token == "sus" || token == "stac") {
+        set_style(in, token);
+        return {};
+    } else if (token == "}") {
+        process_close_brace();
+        return {};
     } else {
         return process_note(in, token);
     }
@@ -150,6 +156,10 @@ int Compiler::get_volume(std::string token) {
     return cur_volume;
 }
 
+int Compiler::get_style() {
+    return cur_style;
+}
+
 int Compiler::get_duration(std::istream &in) {
     Fraction length;
     in >> length;
@@ -163,7 +173,7 @@ std::array<std::uint8_t, 2> Compiler::process_note(std::istream &in, std::string
     int octave = get_octave(token, in);
     int volume = get_volume(token);
     int length = get_duration(in);
-    int style = 0;
+    int style = get_style();
     int opcode = 1;
 
     std::uint16_t instr = 0;
@@ -188,5 +198,36 @@ void Compiler::set_volume(std::string token) {
     } else {
         // TODO: add actual error
         throw 1;
+    }
+}
+
+void Compiler::set_style(std::istream &in, std::string token) {
+    if (token == "sus") {
+        cur_style = SUSTAIN; 
+    } else if (token == "stac") {
+        cur_style = STACCATO;
+    } else {
+        throw 1;
+    }
+
+    block_tokens.push_back(token);
+    read_open_brace(in);
+}
+
+void Compiler::read_open_brace(std::istream &in) {
+    std::string token;
+    in >> token;
+
+    if (token != "{") throw 1;
+}
+
+void Compiler::process_close_brace() {
+    if (block_tokens.empty()) throw 1;
+
+    std::string token = block_tokens.back();
+    block_tokens.pop_back();
+
+    if (token == "sus" || token == "stac") {
+        cur_style = NORMAL;
     }
 }
