@@ -1,6 +1,7 @@
 #include <string>
 #include <numeric>
 #include <vector>
+#include <algorithm>
 
 #include "fraction.h"
 
