@@ -6,6 +6,7 @@
 `define _SEC_PER_MIN 60
 `define _DEFAULT_BPM 96
 `define _PLACEHOLDER_INS 16'b1000000000000001
+`define _PAUSE_LENGTH 2000000
 
 module cpu2 (
     // clock
@@ -82,7 +83,6 @@ module cpu2 (
 
 
     // -----------------------------[ STAGE:  EXECUTE ]-------------------------------
-    reg X_insIsValid = 1;
     reg [15:0] X_ins = `_PLACEHOLDER_INS;
 
     reg [31:0] X_cycleCounterForNotes = 0;
@@ -102,30 +102,31 @@ module cpu2 (
 
     // note
     wire [63:0] X_cyclesPerBeat = `_CYCLES_PER_SEC * `_SEC_PER_MIN / X_bpm;
-    wire [63:0] X_cyclesPerNote; lengthCalc lc (X_lengthCode, X_cyclesPerBeat, X_cyclesPerNote);
+    wire [63:0] X_cyclesPerNote;
+    lengthCalc lc (X_lengthCode, X_cyclesPerBeat, X_cyclesPerNote);
 
     // soundwave
-    wire [31:0] X_soundWavesPerSec;     // = X_freq
     wire [31:0] X_cyclesPerSoundWave = `_CYCLES_PER_SEC / X_soundWavesPerSec;
-    wire X_freqIsValid; freqCalc fc (X_note, X_octave, X_soundWavesPerSec, X_freqIsValid);
+    wire [31:0] X_soundWavesPerSec;     // = X_freq
+    wire X_freqIsValid;
+    freqCalc fc (X_note, X_octave, X_soundWavesPerSec, X_freqIsValid);
 
     // speaker
-    wire X_separationPause = X_cycleCounterForSoundWaves > X_cyclesPerSoundWave - 2000000;
+    wire X_separationPause = X_cycleCounterForSoundWaves > X_cyclesPerSoundWave - `_PAUSE_LENGTH;
     wire X_playNote = X_freqIsValid && !X_separationPause;
-    wire X_oneMinusDutyCycle = X_cyclesPerSoundWave / 4;
+    wire [31:0] X_oneMinusDutyCycle = X_cyclesPerSoundWave / 4;
     wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_oneMinusDutyCycle;
     assign SPEAKER = X_playNote && X_inDutyCycle;
 
     // leds
-	 assign LED_G[3:0] = X_note;
-	 assign LED_R[9:0] = X_note+12*X_octave;
+	assign LED_G[3:0] = X_note;
+	assign LED_R[9:0] = X_note+12*X_octave;
 
-    // transfer information from FW to X
+    // transfer information from FR to X
     always @(posedge CLK) begin
         if(X_cycleCounterForNotes == 0) begin
             X_bpm <= FR_bpm;
             X_ins <= FR_lastReadIns;
-            X_insIsValid <= FR_insIsValid;
         end
     end
 
@@ -148,7 +149,7 @@ module cpu2 (
         end
     end
 
-    
+
 
 
 endmodule
