@@ -10,13 +10,22 @@
 class Compiler {
 private:
     enum VolumeLevel {
-        MUTE,
+        MUTE = 0,
         PIANO,
         MEZZO_FORTE,
         FORTISSIMO
     };
 
+    enum StyleType {
+        NOTHING = 0,
+        STACCATO,
+        NORMAL,
+        SUSTAIN
+    };
+
+    std::vector<std::string> block_tokens;
     VolumeLevel cur_volume;
+    StyleType cur_style;
 
     // Constants for BPM
     constexpr static int MAX_BPM = 1 << 12;
@@ -40,6 +49,7 @@ private:
     int get_note(std::string token);
     int get_octave(std::string token, std::istream &in);
     int get_volume(std::string token);
+    int get_style();
     int get_duration(std::istream &in);
 
 public:
@@ -52,6 +62,10 @@ public:
     std::array<std::uint8_t, 2> process_note(std::istream &in, std::string token);
 
     void set_volume(std::string token);
+    void set_style(std::istream &in, std::string token);
+
+    void read_open_brace(std::istream &in);
+    void process_close_brace();
 };
 
 #endif /* COMPILER_H */
