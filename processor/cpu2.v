@@ -53,10 +53,10 @@ module cpu2 (
     wire FR_insIsValid = FR_insIsNote || FR_insIsBpm || FR_insIsEnd;
 
     // Music Properties
-    wire FR_insBpm = FR_lastReadIns[11:0];
+    wire [11:0] FR_insBpm = FR_lastReadIns[11:0];
 
     // Initial settings
-    reg FR_bpm = `_DEFAULT_BPM;
+    reg [11:0] FR_bpm = `_DEFAULT_BPM;
 
     // -----------------------------[ STAGE: FETCH    ]------------------------------
     wire FR_fetch = X_cycleCounterForNotes % 3 == 0;
@@ -89,7 +89,7 @@ module cpu2 (
     reg [31:0] X_cycleCounterForSoundWaves = 0;
 
     // Music Properties
-    reg [31:0] X_bpm = `_DEFAULT_BPM;
+    reg [11:0] X_bpm = `_DEFAULT_BPM;
 
     // Note Decoding
     wire X_insIsNote = (X_ins[15] == 1);
