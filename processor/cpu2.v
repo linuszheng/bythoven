@@ -1,6 +1,6 @@
 
 
-module cpu (
+module cpu2 (
     // clock
     input wire CLK,
 
