@@ -12,6 +12,11 @@
 #include "compiler.h"
 #include "notes.h"
 
+constexpr static int MAX_BPM = 1 << 12;
+constexpr static int BPM_SHIFT = 0;
+constexpr static int BPM_OPCODE_SHIFT = 12;
+constexpr static int BPM_OPCODE = 0b0001;
+
 int main(int argc, char **argv) {
     if (argc <= 1) {
         std::cerr << "Usage: ./compiler <file>" << std::endl;
@@ -54,6 +59,7 @@ void compile_file(std::string file_name) {
     std::cout << std::hex << std::setfill('0');
     for (auto byte : output_bytes) {
         // casting here so it is not treated as an int
+ 
         std::cout << std::setw(2) << static_cast<uint16_t>(byte);
     }
 
@@ -63,6 +69,8 @@ void compile_file(std::string file_name) {
 std::array<std::uint8_t, 2> process_token(std::istream &in, std::string token) {
     if (token == "end") {
         return process_end();
+    } else if (token == "bpm") {
+        return process_bpm(in);
     } else {
         return process_note(in, token);
     }
@@ -72,3 +80,18 @@ std::array<std::uint8_t, 2> process_end() {
     return {0x00, 0x00};
 }
 
+std::array<std::uint8_t, 2> process_bpm(std::istream &in) {
+    int bpm;
+    in >> bpm;
+
+    // TODO: add a specific error
+    if (in.fail()) throw 1;
+    if (bpm < 0 || bpm >= MAX_BPM) throw 1;
+
+    std::uint16_t instr = 0;
+    instr += bpm << BPM_SHIFT;
+    instr += BPM_OPCODE << BPM_OPCODE_SHIFT;
+
+    uint16_t eight_bits = 1 << 8;
+    return std::array<uint8_t, 2>{static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+}
