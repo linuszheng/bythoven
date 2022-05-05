@@ -33,10 +33,16 @@ constexpr static int STYLE_SHIFT = 12;
 constexpr static int OPCODE_SHIFT = 15;
 
 static int get_note(std::string token);
-static int get_octave(std::istream &in);
+static int get_octave(std::string token, std::istream &in);
+static int get_volume(std::string token);
 static int get_duration(std::istream &in);
 
 int get_note(std::string token) {
+    // special case, the exact value does not matter
+    if (token == "rest") {
+        return 0;
+    }
+
     auto check = [&token](const auto &options) { 
         return any_of(options.begin(), options.end(), [&token](const std::string &s) { 
             return s == token; 
@@ -52,7 +58,12 @@ int get_note(std::string token) {
     return it - NOTES.begin();
 }
 
-int get_octave(std::istream &in) {
+int get_octave(std::string token, std::istream &in) {
+    // no octave is given for a rest, so skip reading
+    if (token == "rest") {
+        return 0;
+    }
+
     int octave;
     in >> octave;
 
@@ -62,6 +73,16 @@ int get_octave(std::istream &in) {
 
     // normalize to 0 for storage
     return octave - MIN_OCTAVE;
+}
+
+int get_volume(std::string token) {
+    // rest is just a note with 0 volume
+    if (token == "rest") {
+        return 0;
+    }
+
+    // default volume
+    return 2;
 }
 
 int get_duration(std::istream &in) {
@@ -74,8 +95,8 @@ int get_duration(std::istream &in) {
 
 std::array<std::uint8_t, 2> process_note(std::istream &in, std::string token) {
     int note = get_note(token);
-    int octave = get_octave(in);
-    int volume = 2;
+    int octave = get_octave(token, in);
+    int volume = get_volume(token);
     int length = get_duration(in);
     int style = 0;
     int opcode = 1;
