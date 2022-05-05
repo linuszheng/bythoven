@@ -1,5 +1,7 @@
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLK
 
+set_instance_assignment -name IO_STANDARD "1.2-V" -to PAUSE
+
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPEAKER
 
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SRAM_A[0]
@@ -65,6 +67,8 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_G[6]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_G[7]
 
 set_location_assignment PIN_R20 -to CLK
+
+set_location_assignment PIN_AC9 -to PAUSE
 
 set_location_assignment PIN_D26 -to SPEAKER
 

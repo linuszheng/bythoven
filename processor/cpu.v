@@ -1,8 +1,10 @@
 
 
 module cpu (
-     // 50MHz input clock
+    // 50MHz input clock
     input wire CLK,
+	 // play pause switch
+	 input wire PAUSE,
 
     // SRAM
     output wire SRAM_WE,
@@ -48,6 +50,8 @@ module cpu (
 	
 	 // debugging frequency
 	 assign LED_G[3:0] = note;
+	 assign LED_G[4] = PAUSE;
+	 assign LED_G[5] = !PAUSE;
 	 assign LED_R[9:0] = note+12*octave;
 
     // calculate cycles
@@ -60,7 +64,7 @@ module cpu (
     // speaker
     reg [31:0] wavesCounter = 0;
 														// adds a slight pause between notes
-    wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 2000000;
+    wire isPlayingNote = !PAUSE && isValidFreq && cycleCounter < noteCycles - 2000000;
 	 wire dutyCycleOn = volume == 0 ? 0 :
 							  volume == 1 ? wavesCounter > waves*3/4 :
 							  volume == 2 ? wavesCounter > waves/2 :
@@ -72,7 +76,7 @@ module cpu (
         if(wavesCounter >= waves) begin
             wavesCounter <= 0;
         end else begin
-            wavesCounter <= wavesCounter+1;
+            wavesCounter <= wavesCounter + (PAUSE ? 0 : 1);
         end
     end
 
@@ -110,7 +114,7 @@ module cpu (
             cycleCounter <= 0;
         end
         else begin
-            cycleCounter <= cycleCounter+1;
+            cycleCounter <= cycleCounter + (PAUSE ? 0 : 1);
         end
     end
 
