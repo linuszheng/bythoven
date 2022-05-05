@@ -140,8 +140,8 @@ module cpu2 (
 
     // speaker
     wire [31:0] X_interNotePauseLength =    X_styleCode == 0 ? X_cyclesPerNote :
-                                            X_styleCode == 1 ? _PAUSE_STACCATO_LENGTH :
-                                            X_styleCode == 2 ? _PAUSE_NORMAL_LENGTH :
+                                            X_styleCode == 1 ? `_PAUSE_STACCATO_LENGTH :
+                                            X_styleCode == 2 ? `_PAUSE_NORMAL_LENGTH :
                                             X_styleCode == 3 ? 0 : 0;
     wire X_separationPause = X_cycleCounterForNotes > (X_cyclesPerNote - X_interNotePauseLength);
     wire [31:0] X_dutyCycleThreshold = X_volume == 0 ? 0 :
