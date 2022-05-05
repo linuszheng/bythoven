@@ -2,11 +2,11 @@
 
 // CONSTANTS
 // 50MHz input clock
-`define _CYCLES_PER_SEC 10
+`define _CYCLES_PER_SEC 50000000
 `define _SEC_PER_MIN 60
 `define _DEFAULT_BPM 96
 `define _PLACEHOLDER_INS 16'b1000000000000001
-`define _PAUSE_LENGTH 2
+`define _PAUSE_LENGTH 2000000
 
 module cpu2 (
     // clock
