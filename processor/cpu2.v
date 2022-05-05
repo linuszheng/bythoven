@@ -9,8 +9,10 @@
 `define _PAUSE_LENGTH 2000000
 
 module cpu2 (
-    // clock
+    // 50 MHz clock
     input wire CLK,
+	 // play/pause switch
+	 input wire PAUSE,
 
     // SRAM
     output wire SRAM_WE,
@@ -111,12 +113,16 @@ module cpu2 (
     // speaker
     wire X_separationPause = X_cycleCounterForSoundWaves > X_cyclesPerSoundWave - `_PAUSE_LENGTH;
     wire X_playNote = X_freqIsValid && !X_separationPause;
-    wire [31:0] X_oneMinusDutyCycle = X_cyclesPerSoundWave / 4;
-    wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_oneMinusDutyCycle;
-    assign SPEAKER = X_playNote && X_inDutyCycle && X_insIsNote;
+    wire [31:0] X_dutyCycleThreshold = X_volume == 0 ? 0 :
+													X_volume == 1 ? X_cyclesPerSoundWave * 3 / 4 :
+													X_volume == 2 ? X_cyclesPerSoundWave / 2 :
+													X_volume == 3 ? X_cyclesPerSoundWave / 4 : 0;
+    wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_dutyCycleThreshold;
+    assign SPEAKER = !PAUSE && X_playNote && X_inDutyCycle && X_insIsNote;
 
     // leds
-	assign LED_G[3:0] = X_note;
+	assign LED_G[0] = !PAUSE;
+	assign LED_G[1] = PAUSE;
 	assign LED_R[9:0] = X_note+12*X_octave;
 
     // transfer information from FR to X
@@ -133,7 +139,7 @@ module cpu2 (
             X_cycleCounterForNotes <= 0;
         end
         else begin
-            X_cycleCounterForNotes <= X_cycleCounterForNotes+1;
+            X_cycleCounterForNotes <= X_cycleCounterForNotes + (PAUSE ? 0 : 1);
         end
     end
 
@@ -142,7 +148,7 @@ module cpu2 (
         if(X_cycleCounterForSoundWaves >= X_cyclesPerSoundWave) begin
             X_cycleCounterForSoundWaves <= 0;
         end else begin
-            X_cycleCounterForSoundWaves <= X_cycleCounterForSoundWaves+1;
+            X_cycleCounterForSoundWaves <= X_cycleCounterForSoundWaves + (PAUSE ? 0 : 1);
         end
     end
 

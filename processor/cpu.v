@@ -3,7 +3,7 @@
 module cpu (
     // 50MHz input clock
     input wire CLK,
-	 // play pause switch
+	 // play/pause switch
 	 input wire PAUSE,
 
     // SRAM
@@ -48,10 +48,9 @@ module cpu (
 
 
 	
-	 // debugging frequency
-	 assign LED_G[3:0] = note;
-	 assign LED_G[4] = PAUSE;
-	 assign LED_G[5] = !PAUSE;
+	 // debugging LEDs
+	 assign LED_G[1] = PAUSE;
+	 assign LED_G[0] = !PAUSE;
 	 assign LED_R[9:0] = note+12*octave;
 
     // calculate cycles
@@ -92,8 +91,7 @@ module cpu (
 
     reg [17:0] pc = 18'b000000000000000000;
 
-
-	 reg firstInstruction = 1;
+	 reg isFirstInstruction = 1;
 	 
     // get next instructions
     always @(posedge CLK) begin
@@ -104,12 +102,12 @@ module cpu (
             nextIns <= SRAM_D;
             pc <= pc+1;
         end
-		  if(firstInstruction && cycleCounter == 5) begin
+		  if(isFirstInstruction && cycleCounter == 5) begin
 				curIns <= nextIns;
 				cycleCounter <= 0;
-				firstInstruction <= 0;
+				isFirstInstruction <= 0;
 		  end
-        else if(!firstInstruction && cycleCounter == noteCycles) begin
+        else if(!isFirstInstruction && cycleCounter == noteCycles-1) begin
 				curIns <= nextIns;
             cycleCounter <= 0;
         end
