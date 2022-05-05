@@ -1,3 +1,6 @@
+#ifndef FRACTION_H
+#define FRACTION_H
+
 #include <iostream>
 #include <array>
 #include <string>
@@ -21,3 +24,5 @@ public:
 };
 
 int get_fraction_index(Fraction total);
+
+#endif /* FRACTION_H */

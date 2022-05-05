@@ -1,4 +1,5 @@
 #include <array>
+#include <algorithm>
 #include <cstdint>
 #include <iomanip>
 #include <ios>
@@ -10,26 +11,24 @@
 #include <vector>
 
 #include "compiler.h"
-#include "notes.h"
+#include "fraction.h"
 
-constexpr static int MAX_BPM = 1 << 12;
-constexpr static int BPM_SHIFT = 0;
-constexpr static int BPM_OPCODE_SHIFT = 12;
-constexpr static int BPM_OPCODE = 0b0001;
+const std::array<std::vector<std::string>, 12> Compiler::NOTES = {
+    std::vector<std::string>{ "B#", "C" },
+    std::vector<std::string>{ "C#", "Db" },
+    std::vector<std::string>{ "D" },
+    std::vector<std::string>{ "D#", "Eb" },
+    std::vector<std::string>{ "E", "Fb" },
+    std::vector<std::string>{ "F", "E#" },
+    std::vector<std::string>{ "F#", "Gb" },
+    std::vector<std::string>{ "G" },
+    std::vector<std::string>{ "G#", "Ab" },
+    std::vector<std::string>{ "A" },
+    std::vector<std::string>{ "A#", "Bb" },
+    std::vector<std::string>{ "B", "Cb" }
+};
 
-int main(int argc, char **argv) {
-    if (argc <= 1) {
-        std::cerr << "Usage: ./compiler <file>" << std::endl;
-        return 1;
-    }
-
-    std::string file_name(argv[1]);
-    compile_file(file_name);
-
-    return 0;
-}
-
-void compile_file(std::string file_name) {
+void Compiler::compile_file(std::string file_name) {
     std::ifstream source(file_name);
     std::vector<std::uint8_t> output_bytes;
 
@@ -66,7 +65,7 @@ void compile_file(std::string file_name) {
     std::cout.copyfmt(old_config);
 }
 
-std::array<std::uint8_t, 2> process_token(std::istream &in, std::string token) {
+std::array<std::uint8_t, 2> Compiler::process_token(std::istream &in, std::string token) {
     if (token == "end") {
         return process_end();
     } else if (token == "bpm") {
@@ -76,11 +75,11 @@ std::array<std::uint8_t, 2> process_token(std::istream &in, std::string token) {
     }
 }
 
-std::array<std::uint8_t, 2> process_end() {
+std::array<std::uint8_t, 2> Compiler::process_end() {
     return {0x00, 0x00};
 }
 
-std::array<std::uint8_t, 2> process_bpm(std::istream &in) {
+std::array<std::uint8_t, 2> Compiler::process_bpm(std::istream &in) {
     int bpm;
     in >> bpm;
 
@@ -91,6 +90,82 @@ std::array<std::uint8_t, 2> process_bpm(std::istream &in) {
     std::uint16_t instr = 0;
     instr += bpm << BPM_SHIFT;
     instr += BPM_OPCODE << BPM_OPCODE_SHIFT;
+
+    uint16_t eight_bits = 1 << 8;
+    return std::array<uint8_t, 2>{static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+}
+
+int Compiler::get_note(std::string token) {
+    // special case, the exact value does not matter
+    if (token == "rest") {
+        return 0;
+    }
+
+    auto check = [&token](const auto &options) { 
+        return any_of(options.begin(), options.end(), [&token](const std::string &s) { 
+            return s == token; 
+        }); 
+    };
+
+    auto it = std::find_if(NOTES.begin(), NOTES.end(), check);
+
+    if (it == NOTES.end()) {
+        throw 0;
+    }
+
+    return it - NOTES.begin();
+}
+
+int Compiler::get_octave(std::string token, std::istream &in) {
+    // no octave is given for a rest, so skip reading
+    if (token == "rest") {
+        return 0;
+    }
+
+    int octave;
+    in >> octave;
+
+    // TODO: use proper exceptions
+    if (in.fail()) throw 1;
+    if (octave < MIN_OCTAVE || octave > MAX_OCTAVE) throw 1;
+
+    // normalize to 0 for storage
+    return octave - MIN_OCTAVE;
+}
+
+int Compiler::get_volume(std::string token) {
+    // rest is just a note with 0 volume
+    if (token == "rest") {
+        return 0;
+    }
+
+    // default volume
+    return 2;
+}
+
+int Compiler::get_duration(std::istream &in) {
+    Fraction length;
+    in >> length;
+
+    int note_idx = get_fraction_index(length);
+    return note_idx;
+}
+
+std::array<std::uint8_t, 2> Compiler::process_note(std::istream &in, std::string token) {
+    int note = get_note(token);
+    int octave = get_octave(token, in);
+    int volume = get_volume(token);
+    int length = get_duration(in);
+    int style = 0;
+    int opcode = 1;
+
+    std::uint16_t instr = 0;
+    instr += note << NOTE_SHIFT;
+    instr += octave << NOTE_OCTAVE_SHIFT;
+    instr += volume << NOTE_VOLUME_SHIFT;
+    instr += length << NOTE_LENGTH_SHIFT;
+    instr += style << NOTE_STYLE_SHIFT;
+    instr += opcode << NOTE_OPCODE_SHIFT;
 
     uint16_t eight_bits = 1 << 8;
     return std::array<uint8_t, 2>{static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
