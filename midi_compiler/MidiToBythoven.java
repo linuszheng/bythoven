@@ -34,8 +34,10 @@ public class MidiToBythoven {
     private static final double MINUTE_MICROSECONDS = 6e7;
     private static final int MIN_NOTE_LENGTH = 64;
     private static final int NOTE_OFFSET = 12;
+    private static final int NUM_NOTE_LENGTHS = 16;
 
     private static final String[] notes = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    private static final int[] noteLengths = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 16, 24, 32, 64};
 
     public static void main(String[] args) {
         /*
@@ -49,6 +51,9 @@ public class MidiToBythoven {
             String[] command = {"midicsv", args[0], "csv.in"};
             execute(command);
         } catch (IOException e) {
+            System.out.println(e.getMessage());
+            System.out.println(e.getStackTrace());
+        } catch (InterruptedException e) {
             System.out.println(e.getMessage());
             System.out.println(e.getStackTrace());
         }
@@ -85,11 +90,12 @@ public class MidiToBythoven {
                         int timeDifference = (time1 - previousTime);
 
                         if (timeDifference > measureMinLength) {
-                            int numRests = (int) Math.round((double) timeDifference / measureMinLength);
-                            Note note = makeNote(-1, -1, -1);
-
-                            for (int i = 0; i < numRests; i++) {
-                                instructions.add(note);
+                            for (int i = 0; i < NUM_NOTE_LENGTHS; i++) {
+                                while (timeDifference - measureLength / noteLengths[i] > 0) {
+                                    timeDifference -= measureLength / noteLengths[i];
+                                    Note note = makeNote(-1, noteLengths[i], measureLength);
+                                    instructions.add(note);
+                                }
                             }
                         }
 
@@ -104,7 +110,6 @@ public class MidiToBythoven {
                         instructions.add(note);
 
                         previousTime = time2;
-
 
                         break;
                 }
@@ -126,14 +131,15 @@ public class MidiToBythoven {
         }
     }
 
-    public static void execute(String[] command) throws IOException {
+    public static void execute(String[] command) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();
+        process.waitFor();
     }
 
     public static Note makeNote(int noteValue, int noteLength, int measureLength) {
         if (noteValue == -1) {
-            return new Note("", -1, 64, true);
+            return new Note("", -1, noteLength, true);
         }
 
         int octave = (noteValue - NOTE_OFFSET) / NOTE_OFFSET;
