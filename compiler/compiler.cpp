@@ -28,6 +28,8 @@ const std::array<std::vector<std::string>, 12> Compiler::NOTES = {
     std::vector<std::string>{ "B", "Cb" }
 };
 
+Compiler::Compiler() : cur_volume(MEZZO_FORTE) {}
+
 void Compiler::compile_file(std::string file_name) {
     std::ifstream source(file_name);
     std::vector<std::uint8_t> output_bytes;
@@ -39,8 +41,11 @@ void Compiler::compile_file(std::string file_name) {
         std::stringstream ss(current_line);
         try {
             while (ss >> token) {
-                for (auto byte : process_token(ss, token)) {
-                    output_bytes.push_back(byte);
+                auto data = process_token(ss, token);
+                if (data) {
+                    for (auto byte : *data) {
+                        output_bytes.push_back(byte);
+                    }
                 }
             }
         } catch (...) {
@@ -65,8 +70,11 @@ void Compiler::compile_file(std::string file_name) {
     std::cout.copyfmt(old_config);
 }
 
-std::array<std::uint8_t, 2> Compiler::process_token(std::istream &in, std::string token) {
-    if (token == "end") {
+std::optional<std::array<std::uint8_t, 2>> Compiler::process_token(std::istream &in, std::string token) {
+    if (token == "p" || token == "mf" || token == "ff") {
+        set_volume(token);
+        return {};
+    } else if (token == "end") {
         return process_end();
     } else if (token == "bpm") {
         return process_bpm(in);
@@ -139,8 +147,7 @@ int Compiler::get_volume(std::string token) {
         return 0;
     }
 
-    // default volume
-    return 2;
+    return cur_volume;
 }
 
 int Compiler::get_duration(std::istream &in) {
@@ -169,4 +176,17 @@ std::array<std::uint8_t, 2> Compiler::process_note(std::istream &in, std::string
 
     uint16_t eight_bits = 1 << 8;
     return std::array<uint8_t, 2>{static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+}
+
+void Compiler::set_volume(std::string token) {
+    if (token == "p") {
+        cur_volume = PIANO;
+    } else if (token == "mf") {
+        cur_volume = MEZZO_FORTE;
+    } else if (token == "ff") {
+        cur_volume = FORTISSIMO;
+    } else {
+        // TODO: add actual error
+        throw 1;
+    }
 }

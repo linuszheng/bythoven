@@ -1,4 +1,8 @@
 bpm 1
 C 2 1/1
+ff
+C 2 1/1
+p
+C 2 1/1
 rest 1/1
 end

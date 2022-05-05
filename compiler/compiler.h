@@ -3,11 +3,21 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
 class Compiler {
 private:
+    enum VolumeLevel {
+        MUTE,
+        PIANO,
+        MEZZO_FORTE,
+        FORTISSIMO
+    };
+
+    VolumeLevel cur_volume;
+
     // Constants for BPM
     constexpr static int MAX_BPM = 1 << 12;
     constexpr static int BPM_SHIFT = 0;
@@ -33,11 +43,15 @@ private:
     int get_duration(std::istream &in);
 
 public:
+    Compiler();
+
     void compile_file(std::string file_name);
-    std::array<std::uint8_t, 2> process_token(std::istream &in, std::string token);
+    std::optional<std::array<std::uint8_t, 2>> process_token(std::istream &in, std::string token);
     std::array<std::uint8_t, 2> process_end();
     std::array<std::uint8_t, 2> process_bpm(std::istream &in);
     std::array<std::uint8_t, 2> process_note(std::istream &in, std::string token);
+
+    void set_volume(std::string token);
 };
 
 #endif /* COMPILER_H */
