@@ -70,7 +70,7 @@ void Compiler::compile_file(std::string file_name) {
     std::cout.copyfmt(old_config);
 }
 
-std::optional<std::array<std::uint8_t, 2>> Compiler::process_token(std::istream &in, std::string token) {
+std::optional<std::vector<std::uint8_t>> Compiler::process_token(std::istream &in, std::string token) {
     if (token == "p" || token == "mf" || token == "ff") {
         set_volume(token);
         return {};
@@ -89,11 +89,11 @@ std::optional<std::array<std::uint8_t, 2>> Compiler::process_token(std::istream 
     }
 }
 
-std::array<std::uint8_t, 2> Compiler::process_end() {
+std::vector<std::uint8_t> Compiler::process_end() {
     return {0x00, 0x00};
 }
 
-std::array<std::uint8_t, 2> Compiler::process_bpm(std::istream &in) {
+std::vector<std::uint8_t> Compiler::process_bpm(std::istream &in) {
     int bpm;
     in >> bpm;
 
@@ -106,7 +106,7 @@ std::array<std::uint8_t, 2> Compiler::process_bpm(std::istream &in) {
     instr += BPM_OPCODE << BPM_OPCODE_SHIFT;
 
     uint16_t eight_bits = 1 << 8;
-    return std::array<uint8_t, 2>{static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
 }
 
 int Compiler::get_note(std::string token) {
@@ -168,7 +168,7 @@ int Compiler::get_duration(std::istream &in) {
     return note_idx;
 }
 
-std::array<std::uint8_t, 2> Compiler::process_note(std::istream &in, std::string token) {
+std::vector<std::uint8_t> Compiler::process_note(std::istream &in, std::string token) {
     int note = get_note(token);
     int octave = get_octave(token, in);
     int volume = get_volume(token);
@@ -185,7 +185,7 @@ std::array<std::uint8_t, 2> Compiler::process_note(std::istream &in, std::string
     instr += opcode << NOTE_OPCODE_SHIFT;
 
     uint16_t eight_bits = 1 << 8;
-    return std::array<uint8_t, 2>{static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
 }
 
 void Compiler::set_volume(std::string token) {

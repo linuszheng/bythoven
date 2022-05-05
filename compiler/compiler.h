@@ -27,6 +27,9 @@ private:
     VolumeLevel cur_volume;
     StyleType cur_style;
 
+    /* int instruction_address; */
+    /* int repeat_address; */
+
     // Constants for BPM
     constexpr static int MAX_BPM = 1 << 12;
     constexpr static int BPM_SHIFT = 0;
@@ -56,10 +59,10 @@ public:
     Compiler();
 
     void compile_file(std::string file_name);
-    std::optional<std::array<std::uint8_t, 2>> process_token(std::istream &in, std::string token);
-    std::array<std::uint8_t, 2> process_end();
-    std::array<std::uint8_t, 2> process_bpm(std::istream &in);
-    std::array<std::uint8_t, 2> process_note(std::istream &in, std::string token);
+    std::optional<std::vector<std::uint8_t>> process_token(std::istream &in, std::string token);
+    std::vector<std::uint8_t> process_end();
+    std::vector<std::uint8_t> process_bpm(std::istream &in);
+    std::vector<std::uint8_t> process_note(std::istream &in, std::string token);
 
     void set_volume(std::string token);
     void set_style(std::istream &in, std::string token);
