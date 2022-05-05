@@ -34,7 +34,7 @@ module cpu (
     wire [3:0] note = curIns[3:0];
 	 wire [1:0] octave = curIns[5:4];
 	 wire [31:0] waves = 50000000 / freq;
-    wire [2:0] volume = curIns[7:6]+1;
+    wire [1:0] volume = curIns[7:6];
 
     freqCalc fc (note, octave, freq, isValidFreq);
 
@@ -61,7 +61,11 @@ module cpu (
     reg [31:0] wavesCounter = 0;
 														// adds a slight pause between notes
     wire isPlayingNote = isValidFreq && cycleCounter < noteCycles - 2000000;
-    assign SPEAKER = isPlayingNote ? (wavesCounter > waves/4) : 0;
+	 wire dutyCycleOn = volume == 0 ? 0 :
+							  volume == 1 ? wavesCounter > waves*3/4 :
+							  volume == 2 ? wavesCounter > waves/2 :
+							  volume == 3 ? wavesCounter > waves/4 : 0;
+    assign SPEAKER = isPlayingNote ? dutyCycleOn : 0;
     
 	 // counter for playing a frequency
     always @(posedge CLK) begin
