@@ -2,11 +2,11 @@
 
 // CONSTANTS
 // 50MHz input clock
-`define _CYCLES_PER_SEC 50000000
+`define _CYCLES_PER_SEC 10
 `define _SEC_PER_MIN 60
 `define _DEFAULT_BPM 96
 `define _PLACEHOLDER_INS 16'b1000000000000001
-`define _PAUSE_LENGTH 2000000
+`define _PAUSE_LENGTH 2
 
 module cpu2 (
     // clock
@@ -34,11 +34,7 @@ module cpu2 (
     assign SRAM_OE = 0;
     assign SRAM_LB = 0;
     assign SRAM_UB = 0;
-    assign SRAM_A  = sramAddrReg;
-
-    reg [17:0] sramAddrReg = 0;
-
-
+    assign SRAM_A  = FR_pc;
 
     // FW = Fetch + Wait (Multicycle)
     reg [17:0] FR_pc = 0;
@@ -58,17 +54,18 @@ module cpu2 (
     // Initial settings
     reg [11:0] FR_bpm = `_DEFAULT_BPM;
 
-    // -----------------------------[ STAGE: FETCH    ]------------------------------
-    wire FR_fetch = X_cycleCounterForNotes % 3 == 0;
-    always @(posedge CLK) begin
-        if(FR_fetch && FR_shouldFetchIns) begin
-            sramAddrReg <= FR_pc;
-        end
-    end
+    /* assign sramAddrReg = FR_pc; */
+    /* // -----------------------------[ STAGE: FETCH    ]------------------------------ */
+    /* wire FR_fetch = X_cycleCounterForNotes % 3 == 0; */
+    /* always @(posedge CLK) begin */
+    /*     if(FR_fetch && FR_shouldFetchIns) begin */
+    /*         sramAddrReg <= FR_pc; */
+    /*     end */
+    /* end */
 
 
     // -----------------------------[ STAGE:  READ    ]-------------------------------
-    wire FR_read = X_cycleCounterForNotes % 3 == 2;
+    wire FR_read = X_cycleCounterForNotes % 4 == 2;
     always @(posedge CLK) begin
         if(FR_read && FR_shouldReadIns) begin
             FR_lastReadIns <= SRAM_D;
@@ -149,7 +146,10 @@ module cpu2 (
         end
     end
 
-
-
-
+    /* // only for simulation */
+    /* always @(posedge CLK) begin */
+    /*     if (X_ins == 0) begin */
+    /*         $finish; */
+    /*     end */
+    /* end */
 endmodule

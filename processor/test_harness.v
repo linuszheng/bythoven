@@ -21,7 +21,7 @@ module clock(output clk);
     assign clk = theClock;
 
     always begin
-        #500;
+        #8;
         theClock = !theClock;
     end
 endmodule
@@ -40,6 +40,8 @@ module harness_SRAM(input clk, input [17:0]SRAM_A, output [15:0]SRAM_D);
     end
 
     initial begin
+        $dumpfile("cpu.vcd");
+        $dumpvars(0, main);
         $readmemh("mem.hex", data);
     end
 endmodule
