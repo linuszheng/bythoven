@@ -102,16 +102,18 @@ module cpu (
     wire [1:0] X_styleCode = X_ins[13:12];
     wire X_extraInfo = X_ins[14];
 
-    // cycles
+    // note
     wire [63:0] X_cyclesPerBeat = _CYCLES_PER_SEC * _SEC_PER_MIN / X_bpm;
     wire [63:0] X_cyclesPerNote;
     lengthCalc lc (X_lengthCode, X_cyclesPerBeat, X_cyclesPerNote);
 
+    // soundwave
     wire [31:0] X_soundWavesPerSec;     // = X_freq
     wire [31:0] X_cyclesPerSoundWave = _CYCLES_PER_SEC / X_soundWavesPerSec;
     wire X_freqIsValid;
     freqCalc fc (X_note, X_octave, X_soundWavesPerSec, X_freqIsValid);
 
+    // speaker
     wire X_separationPause = X_cycleCounterForSoundWaves > X_cyclesPerSoundWave - 2000000;
     wire X_playNote = X_freqIsValid && !X_separationPause;
     wire X_oneMinusDutyCycle = X_cyclesPerSoundWave / 4;
@@ -138,6 +140,7 @@ module cpu (
         end
     end
 
+    // manage cycleCounterForSoundWaves
     always @(posedge CLK) begin
         if(X_cycleCounterForSoundWaves >= X_cyclesPerSoundWave) begin
             X_cycleCounterForSoundWaves <= 0;
