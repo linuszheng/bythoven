@@ -1,6 +1,13 @@
 
 
-module cpu (
+// CONSTANTS
+// 50MHz input clock
+`define _CYCLES_PER_SEC 50000000
+`define _SEC_PER_MIN 60
+`define _DEFAULT_BPM 96
+`define _PLACEHOLDER_INS 16'b1000000000001111
+
+module cpu2 (
     // clock
     input wire CLK,
 
@@ -18,13 +25,6 @@ module cpu (
     output wire [9:0] LED_R,
     output wire [7:0] LED_G
 );
-
-    // CONSTANTS
-    // 50MHz input clock
-    wire [31:0] _CYCLES_PER_SEC = 50000000;
-    wire [31:0] _SEC_PER_MIN = 60;
-    wire [31:0] _DEFAULT_BPM = 96;
-    wire [15:0] _PLACEHOLDER_INS = 0'b1000000000001111;
 
 
     // SRAM
@@ -55,7 +55,7 @@ module cpu (
     wire FW_insBpm = FW_ins[11:0];
 
     // Initial settings
-    reg FW_bpm = _DEFAULT_BPM;
+    reg FW_bpm = `_DEFAULT_BPM;
 
     // -----------------------------[ STAGE: FETCH    ]------------------------------
     wire FW_fetch = X_cycleCounterForNotes % 3 == 0;
@@ -85,7 +85,7 @@ module cpu (
     // -----------------------------[ STAGE:  EXECUTE ]-------------------------------
     reg X_insIsValid = 1;
     reg [31:0] X_cycleCounter = 0;
-    reg [15:0] X_ins = _PLACEHOLDER_INS;
+    reg [15:0] X_ins = `_PLACEHOLDER_INS;
 
     reg [31:0] X_cycleCounterForNotes = 0;
     reg [31:0] X_cycleCounterForSoundWaves = 0;
@@ -103,13 +103,13 @@ module cpu (
     wire X_extraInfo = X_ins[14];
 
     // note
-    wire [63:0] X_cyclesPerBeat = _CYCLES_PER_SEC * _SEC_PER_MIN / X_bpm;
+    wire [63:0] X_cyclesPerBeat = `_CYCLES_PER_SEC * `_SEC_PER_MIN / X_bpm;
     wire [63:0] X_cyclesPerNote;
     lengthCalc lc (X_lengthCode, X_cyclesPerBeat, X_cyclesPerNote);
 
     // soundwave
     wire [31:0] X_soundWavesPerSec;     // = X_freq
-    wire [31:0] X_cyclesPerSoundWave = _CYCLES_PER_SEC / X_soundWavesPerSec;
+    wire [31:0] X_cyclesPerSoundWave = `_CYCLES_PER_SEC / X_soundWavesPerSec;
     wire X_freqIsValid;
     freqCalc fc (X_note, X_octave, X_soundWavesPerSec, X_freqIsValid);
 
@@ -120,6 +120,9 @@ module cpu (
     wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_oneMinusDutyCycle;
     assign SPEAKER = X_playNote && X_inDutyCycle;
 
+    // leds
+	 assign LED_G[3:0] = X_note;
+	 assign LED_R[9:0] = X_note+12*X_octave;
 
     // transfer information from FW to X
     always @(posedge CLK) begin
