@@ -1,18 +1,28 @@
-
-
 // CONSTANTS
 // 50MHz input clock
 `define _CYCLES_PER_SEC 50000000
 `define _SEC_PER_MIN 60
 `define _DEFAULT_BPM 96
 `define _PLACEHOLDER_INS 16'b1000000000000001
-`define _PAUSE_LENGTH 2000000
+`define _PAUSE_NORMAL_LENGTH 2000000
+`define _PAUSE_STACCATO_LENGTH 10000000
+
+/*
+
+TODO
+- finish repeat logic for 1 repeat
+- finish repeat logic for n nested repeats
+- ensure that pause lengths do not shorten the note too much so that it is unhearable,
+  also maybe make the pause length a fraction of the note length itself instead of constant
+
+*/
 
 module cpu2 (
     // 50 MHz clock
     input wire CLK,
-	 // play/pause switch
-	 input wire PAUSE,
+
+	// play/pause switch
+	input wire PAUSE,
 
     // SRAM
     output wire SRAM_WE,
@@ -48,13 +58,23 @@ module cpu2 (
     wire FR_insIsNote  = (FR_lastReadIns[15] == 1);
     wire FR_insIsEnd   = (FR_lastReadIns[15:12] == 4'b0000);
     wire FR_insIsBpm   = (FR_lastReadIns[15:12] == 4'b0001);
+    wire FR_insIsRep1  = (FR_lastReadIns[15:12] == 4'b0010);
+    wire FR_insIsRep2  = (FR_lastReadIns[15:12] == 4'b0011);
     wire FR_insIsValid = FR_insIsNote || FR_insIsBpm || FR_insIsEnd;
+
+    // Repeat - we arbitrarily support 8
+    wire [11:0] FR_insRepLocHi12 = FR_lastReadIns[11:0];
+    wire [5:0] FR_insRepLocLo6 = FR_lastReadIns[11:6];
+    wire [5:0] FR_insRepCounter = FR_lastReadIns[5:0];
+    reg [5:0] FR_repCounters [7:0];
+    reg [2:0] FR_curRepNum = 0;
+
 
     // Music Properties
     wire [11:0] FR_insBpm = FR_lastReadIns[11:0];
 
     // Initial settings
-    reg [11:0] FR_bpm = `_DEFAULT_BPM;
+    reg [11:0] FR_regBpm = `_DEFAULT_BPM;
 
     /* assign sramAddrReg = FR_pc; */
     /* // -----------------------------[ STAGE: FETCH    ]------------------------------ */
@@ -74,7 +94,7 @@ module cpu2 (
             FR_pc <= FR_pc+1;
 
             if(FR_insIsBpm) begin
-                FR_bpm <= FR_insBpm;
+                FR_regBpm <= FR_insBpm;
             end
         end
     end
@@ -111,14 +131,20 @@ module cpu2 (
     freqCalc fc (X_note, X_octave, X_soundWavesPerSec, X_freqIsValid);
 
     // speaker
-    wire X_separationPause = X_cycleCounterForSoundWaves > X_cyclesPerSoundWave - `_PAUSE_LENGTH;
-    wire X_playNote = X_freqIsValid && !X_separationPause;
+    wire [31:0] X_interNotePauseLength =    X_styleCode == 0 ? X_cyclesPerNote :
+                                            X_styleCode == 1 ? _PAUSE_STACCATO_LENGTH :
+                                            X_styleCode == 2 ? _PAUSE_NORMAL_LENGTH :
+                                            X_styleCode == 3 ? 0 : 0;
+    wire X_separationPause = X_cycleCounterForNotes > (X_cyclesPerNote - X_interNotePauseLength);
     wire [31:0] X_dutyCycleThreshold = X_volume == 0 ? 0 :
 													X_volume == 1 ? X_cyclesPerSoundWave * 3 / 4 :
 													X_volume == 2 ? X_cyclesPerSoundWave / 2 :
 													X_volume == 3 ? X_cyclesPerSoundWave / 4 : 0;
     wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_dutyCycleThreshold;
-    assign SPEAKER = !PAUSE && X_playNote && X_inDutyCycle && X_insIsNote;
+
+    wire X_isValidNote = X_freqIsValid && X_insIsNote;
+    wire X_isNotStopped = !PAUSE && !X_separationPause;
+    assign SPEAKER = X_isValidNote && X_isNotStopped && X_inDutyCycle;
 
     // leds
 	assign LED_G[0] = !PAUSE;
@@ -128,14 +154,14 @@ module cpu2 (
     // transfer information from FR to X
     always @(posedge CLK) begin
         if(X_cycleCounterForNotes == 0) begin
-            X_bpm <= FR_bpm;
+            X_bpm <= FR_regBpm;
             X_ins <= FR_lastReadIns;
         end
     end
 
     // manage cycleCounterForNotes
     always @(posedge CLK) begin
-        if(X_cycleCounterForNotes == X_cyclesPerNote-1) begin
+        if(X_cycleCounterForNotes >= X_cyclesPerNote-1) begin
             X_cycleCounterForNotes <= 0;
         end
         else begin
