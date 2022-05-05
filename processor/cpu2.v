@@ -49,7 +49,7 @@ module cpu2 (
     assign SRAM_A  = FR_pc;
 
     // FW = Fetch + Wait (Multicycle)
-    reg [17:0] FR_pc = 0;
+    reg [17:0] FR_pc = 18'hff00;
     reg [15:0] FR_lastReadIns = `_PLACEHOLDER_INS;
     wire FR_shouldFetchIns = FR_insIsValid && !FR_insIsEnd && (!FR_insIsNote || X_cycleCounterForNotes == 0);
     wire FR_shouldReadIns  = FR_insIsValid && !FR_insIsEnd && (!FR_insIsNote || X_cycleCounterForNotes == 2);
