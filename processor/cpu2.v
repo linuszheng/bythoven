@@ -120,6 +120,9 @@ module cpu2 (
     wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_oneMinusDutyCycle;
     assign SPEAKER = X_playNote && X_inDutyCycle;
 
+    // leds
+	 assign LED_G[3:0] = X_note;
+	 assign LED_R[9:0] = X_note+12*X_octave;
 
     // transfer information from FW to X
     always @(posedge CLK) begin
