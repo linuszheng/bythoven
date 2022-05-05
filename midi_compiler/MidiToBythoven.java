@@ -46,7 +46,7 @@ public class MidiToBythoven {
          * Assumes only one note is played at a time
          */
         try {
-            String[] command = {"midicsv", args[0], "csv.txt"};
+            String[] command = {"midicsv", args[0], "csv.in"};
             execute(command);
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -55,7 +55,7 @@ public class MidiToBythoven {
 
         // CSV to Bythoven
         try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader("csv.txt"));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader("csv.in"));
             PrintWriter printWriter = new PrintWriter(new FileWriter("output.music"));
 
             String line;
