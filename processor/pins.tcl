@@ -1,6 +1,6 @@
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLK
 
-set_instance_assignment -name IO_STANDARD "1.2-V" -to PAUSE
+set_instance_assignment -name IO_STANDARD "1.2 V" -to PAUSE
 
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPEAKER
 
