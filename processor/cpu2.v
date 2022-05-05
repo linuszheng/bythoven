@@ -36,7 +36,7 @@ module cpu2 (
     assign SRAM_UB = 0;
     assign SRAM_A  = sramAddrReg;
 
-    reg sramAddrReg = 0;
+    reg [17:0] sramAddrReg = 0;
 
 
 
@@ -107,7 +107,7 @@ module cpu2 (
 
     // soundwave
     wire [31:0] X_cyclesPerSoundWave = `_CYCLES_PER_SEC / X_soundWavesPerSec;
-    wire [31:0] X_soundWavesPerSec;     // = X_freq
+    wire [19:0] X_soundWavesPerSec;     // = X_freq
     wire X_freqIsValid;
     freqCalc fc (X_note, X_octave, X_soundWavesPerSec, X_freqIsValid);
 
