@@ -113,7 +113,7 @@ module cpu2 (
     wire X_playNote = X_freqIsValid && !X_separationPause;
     wire [31:0] X_oneMinusDutyCycle = X_cyclesPerSoundWave / 4;
     wire X_inDutyCycle = X_cycleCounterForSoundWaves > X_oneMinusDutyCycle;
-    assign SPEAKER = X_playNote && X_inDutyCycle;
+    assign SPEAKER = X_playNote && X_inDutyCycle && X_insIsNote;
 
     // leds
 	assign LED_G[3:0] = X_note;
