@@ -62,13 +62,21 @@ module cpu2 (
     wire FR_insIsRep2  = (FR_lastReadIns[15:12] == 4'b0011);
     wire FR_insIsValid = FR_insIsNote || FR_insIsBpm || FR_insIsEnd;
 
-    // Repeat - we arbitrarily support 8
+    // Repeat - we support 7 levels of nested loops
     wire [11:0] FR_insRepLocHi12 = FR_lastReadIns[11:0];
     wire [5:0] FR_insRepLocLo6 = FR_lastReadIns[11:6];
     wire [5:0] FR_insRepCounter = FR_lastReadIns[5:0];
-    reg [5:0] FR_repCounters [7:0];
-    reg [2:0] FR_curRepNum = 0;
+    reg [5:0] FR_repCounters [7:0];     // stores: number of repeats left
+    reg [2:0] FR_curRepNum = 0;         // stores: number of loops that pc is currently in
+    reg [17:0] FR_curRepLine = 0;       // stores: pc number of last loop instruction
 
+    reg [15:0] FR_insBufferRep1 = 0;
+    reg FR_insBufferRep1isValid = 0;
+    reg [15:0] FR_insBufferRep2 = 0;
+    reg FR_insBufferRep2isValid = 0;
+    
+    // Repeat - calculations
+    // wire [17:0] FR_nextPc = 
 
     // Music Properties
     wire [11:0] FR_insBpm = FR_lastReadIns[11:0];
