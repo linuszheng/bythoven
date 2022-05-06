@@ -69,6 +69,7 @@ module cpu2 (
     wire [2:0] FR_insRepeatCount = FR_lastReadIns[5:3];
     wire [2:0] FR_insRepeatLevel = FR_lastReadIns[2:0];
     wire [17:0] FR_nextPc = {FR_regRepeatHi, FR_insRepeatLo};
+    reg [2:0] FR_repCounters [7:0];  
 
     // Music Properties
     wire [11:0] FR_insBpm = FR_lastReadIns[11:0];
