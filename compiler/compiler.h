@@ -26,6 +26,7 @@ private:
     VolumeLevel cur_volume;
     StyleType cur_style;
 
+    std::vector<std::uint8_t> output_bytes;
     int next_instruction_address;
     std::vector<int> repeat_address;
     std::vector<int> repeat_count;
@@ -65,8 +66,8 @@ private:
     constexpr static int REPEAT_LOW_OPCODE = 0b0011;
     constexpr static int REPEAT_LOW_OPCODE_SHIFT = 12;
     constexpr static int REPEAT_LOW_ADDR_SHIFT = 6;
-    constexpr static int REPEAT_LOW_LEVEL_SHIFT = 3;
-    constexpr static int REPEAT_LOW_COUNT_SHIFT = 0;
+    constexpr static int REPEAT_LOW_COUNT_SHIFT = 2;
+    constexpr static int REPEAT_LOW_LEVEL_SHIFT = 0;
 
     // Helper methods
     int get_note(std::string token);
@@ -76,6 +77,7 @@ private:
     int get_duration(std::istream &in);
 
     std::array<std::uint8_t, 2> split_instr(std::uint16_t instr);
+    void add_instr(std::uint16_t instr);
 
 public:
     Compiler();

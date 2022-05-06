@@ -32,14 +32,10 @@ Compiler::Compiler() : cur_volume(MEZZO_FORTE), cur_style(NORMAL), next_instruct
 
 void Compiler::compile_file(std::string file_name) {
     std::ifstream source(file_name);
-    std::vector<std::uint8_t> output_bytes;
 
     // add two instructions to buffer
-    for (int i = 0; i < 2; i++) {
-        auto [low, high] = split_instr(REST_1_64);
-        output_bytes.push_back(low);
-        output_bytes.push_back(high);
-    }
+    add_instr(REST_1_64);
+    add_instr(REST_1_64);
 
     std::string current_line, token;
     int line_number = 1;
@@ -50,10 +46,7 @@ void Compiler::compile_file(std::string file_name) {
             while (ss >> token) {
                 auto data = process_token(ss, token);
                 for (auto instr : data) {
-                    auto [low, high] = split_instr(instr);
-                    output_bytes.push_back(low);
-                    output_bytes.push_back(high);
-                    next_instruction_address++;
+                    add_instr(instr);
                 }
             }
         } catch (...) {
@@ -70,8 +63,7 @@ void Compiler::compile_file(std::string file_name) {
 
     std::cout << std::hex << std::setfill('0');
     for (auto byte : output_bytes) {
-        // casting here so it is not treated as an int
- 
+        // casting here so it is not treated as a char
         std::cout << std::setw(2) << static_cast<uint16_t>(byte);
     }
 
@@ -115,8 +107,7 @@ std::vector<std::uint16_t> Compiler::process_bpm(std::istream &in) {
     instr += bpm << BPM_SHIFT;
     instr += BPM_OPCODE << BPM_OPCODE_SHIFT;
 
-    uint16_t eight_bits = 1 << 8;
-    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+    return {instr};
 }
 
 int Compiler::get_note(std::string token) {
@@ -286,4 +277,11 @@ std::vector<std::uint16_t> Compiler::process_close_brace() {
 std::array<std::uint8_t, 2> Compiler::split_instr(std::uint16_t instr) {
     uint16_t eight_bits = 1 << 8;
     return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+}
+
+void Compiler::add_instr(std::uint16_t instr) {
+    auto [low, high] = split_instr(instr);
+    output_bytes.push_back(low);
+    output_bytes.push_back(high);
+    next_instruction_address++;
 }
