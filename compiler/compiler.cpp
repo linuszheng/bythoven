@@ -45,7 +45,6 @@ void Compiler::compile_file(std::string file_name) {
     int line_number = 1;
 
     while (std::getline(source, current_line)) {
-        std::cout << current_line << std::endl;
         std::stringstream ss(current_line);
         try {
             while (ss >> token) {
@@ -270,9 +269,6 @@ std::vector<std::uint16_t> Compiler::process_close_brace() {
     int six_bits = 1 << 6;
     int addr_low = address % six_bits;   // six lowest bits in the lower part
     int addr_high = address / six_bits;  // rest of the bits in upper part
-
-    std::cout << address << std::endl;
-    std::cout << addr_low << ' ' << addr_high << std::endl;
 
     std::uint16_t instr_high = 0;
     instr_high += addr_high << REPEAT_HIGH_ADDR_SHIFT;
