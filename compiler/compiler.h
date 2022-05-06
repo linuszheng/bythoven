@@ -31,6 +31,9 @@ private:
     std::vector<int> repeat_count;
     int repeat_level;
 
+    // 1/64th rest for padding
+    constexpr static std::uint16_t REST_1_64 = 0x8000;
+
     // Constants for BPM
     constexpr static int MAX_BPM = 1 << 12;
     constexpr static int BPM_SHIFT = 0;

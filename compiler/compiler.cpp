@@ -34,6 +34,13 @@ void Compiler::compile_file(std::string file_name) {
     std::ifstream source(file_name);
     std::vector<std::uint8_t> output_bytes;
 
+    // add two instructions to buffer
+    for (int i = 0; i < 2; i++) {
+        auto [low, high] = split_instr(REST_1_64);
+        output_bytes.push_back(low);
+        output_bytes.push_back(high);
+    }
+
     std::string current_line, token;
     int line_number = 1;
 
