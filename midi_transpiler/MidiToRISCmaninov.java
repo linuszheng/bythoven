@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class MidiToBythoven {
+public class MidiToRISCmaninov {
 
     static class Note {
         String note;

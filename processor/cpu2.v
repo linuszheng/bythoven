@@ -6,6 +6,7 @@
 `define _PLACEHOLDER_INS 16'b1000000000000001
 `define _PAUSE_NORMAL_LENGTH 2000000
 `define _PAUSE_STACCATO_LENGTH 10000000
+`define _DEFAULT_REPEAT_HI 000000000000
 
 /*
 
@@ -49,7 +50,7 @@ module cpu2 (
     assign SRAM_A  = FR_pc;
 
     // FW = Fetch + Wait (Multicycle)
-    reg [17:0] FR_pc = 0;
+    reg [17:0] FR_pc = 18'hff00;
     reg [15:0] FR_lastReadIns = `_PLACEHOLDER_INS;
     wire FR_shouldFetchIns = FR_insIsValid && !FR_insIsEnd && (!FR_insIsNote || X_cycleCounterForNotes == 0);
     wire FR_shouldReadIns  = FR_insIsValid && !FR_insIsEnd && (!FR_insIsNote || X_cycleCounterForNotes == 2);
@@ -60,49 +61,56 @@ module cpu2 (
     wire FR_insIsBpm   = (FR_lastReadIns[15:12] == 4'b0001);
     wire FR_insIsRep1  = (FR_lastReadIns[15:12] == 4'b0010);
     wire FR_insIsRep2  = (FR_lastReadIns[15:12] == 4'b0011);
-    wire FR_insIsValid = FR_insIsNote || FR_insIsBpm || FR_insIsEnd;
-
-    // Repeat - we support 7 levels of nested loops
-    wire [11:0] FR_insRepLocHi12 = FR_lastReadIns[11:0];
-    wire [5:0] FR_insRepLocLo6 = FR_lastReadIns[11:6];
-    wire [5:0] FR_insRepCounter = FR_lastReadIns[5:0];
-    reg [5:0] FR_repCounters [7:0];     // stores: number of repeats left
-    reg [2:0] FR_curRepNum = 0;         // stores: number of loops that pc is currently in
-    reg [17:0] FR_curRepLine = 0;       // stores: pc number of last loop instruction
-
-    reg [15:0] FR_insBufferRep1 = 0;
-    reg FR_insBufferRep1isValid = 0;
-    reg [15:0] FR_insBufferRep2 = 0;
-    reg FR_insBufferRep2isValid = 0;
+    wire FR_insIsValid = FR_insIsNote || FR_insIsRep1 || FR_insIsRep2 || FR_insIsBpm || FR_insIsEnd;
     
     // Repeat - calculations
-    // wire [17:0] FR_nextPc = 
+    wire [11:0] FR_insRepeatHi = FR_lastReadIns[11:0];
+    wire [11:6] FR_insRepeatLo = FR_lastReadIns[11:6];
+    wire [2:0] FR_insRepeatCount = FR_lastReadIns[5:3];
+    wire [2:0] FR_insRepeatLevel = FR_lastReadIns[2:0];
+    wire [17:0] FR_nextPc = {FR_regRepeatHi, FR_insRepeatLo};
+    reg [2:0] FR_repCounters [7:0];  
 
     // Music Properties
     wire [11:0] FR_insBpm = FR_lastReadIns[11:0];
 
     // Initial settings
     reg [11:0] FR_regBpm = `_DEFAULT_BPM;
-
-    /* assign sramAddrReg = FR_pc; */
-    /* // -----------------------------[ STAGE: FETCH    ]------------------------------ */
-    /* wire FR_fetch = X_cycleCounterForNotes % 3 == 0; */
-    /* always @(posedge CLK) begin */
-    /*     if(FR_fetch && FR_shouldFetchIns) begin */
-    /*         sramAddrReg <= FR_pc; */
-    /*     end */
-    /* end */
-
+    reg [11:0] FR_regRepeatHi = `_DEFAULT_REPEAT_HI;
 
     // -----------------------------[ STAGE:  READ    ]-------------------------------
     wire FR_read = X_cycleCounterForNotes % 4 == 2;
     always @(posedge CLK) begin
         if(FR_read && FR_shouldReadIns) begin
             FR_lastReadIns <= SRAM_D;
-            FR_pc <= FR_pc+1;
 
             if(FR_insIsBpm) begin
                 FR_regBpm <= FR_insBpm;
+            end
+            if(FR_insIsRep1) begin
+                FR_regRepeatHi <= FR_insRepeatHi;
+            end
+            if (FR_insIsRep2) begin
+                if (FR_insRepeatCount == 0) begin
+                    FR_pc <= FR_pc+1;
+                end
+                case(FR_repCounters[FR_insRepeatLevel])
+                    0: begin
+                        FR_repCounters[FR_insRepeatLevel] <= FR_insRepeatCount;
+                        FR_pc <= FR_nextPc;
+                    end
+                    1: begin
+                        FR_repCounters[FR_insRepeatLevel] <= 0;
+                        FR_pc <= FR_pc+1;
+                    end
+                    default: begin
+                        FR_repCounters[FR_insRepeatLevel] <= FR_repCounters[FR_insRepeatLevel] - 1;
+                        FR_pc <= FR_nextPc;
+                    end
+                endcase
+            end
+            else begin
+                FR_pc <= FR_pc+1;
             end
         end
     end
