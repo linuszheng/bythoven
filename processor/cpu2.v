@@ -68,11 +68,6 @@ module cpu2 (
     wire [5:0] FR_insRepLocLo6 = FR_lastReadIns[11:6];
     wire [5:0] FR_insRepCounter = FR_lastReadIns[5:0];
     reg [2:0] FR_repCounters [7:0];     // stores: number of repeats left
-
-    reg [15:0] FR_insBufferRep1 = 0;
-    reg FR_insBufferRep1isValid = 0;
-    reg [15:0] FR_insBufferRep2 = 0;
-    reg FR_insBufferRep2isValid = 0;
     
     // Repeat - calculations
     wire [11:0] FR_insRepeatHi = FR_lastReadIns[11:0];
@@ -88,45 +83,39 @@ module cpu2 (
     reg [11:0] FR_regBpm = `_DEFAULT_BPM;
     reg [11:0] FR_regRepeatHi = `_DEFAULT_REPEAT_HI;
 
-    /* assign sramAddrReg = FR_pc; */
-    /* // -----------------------------[ STAGE: FETCH    ]------------------------------ */
-    /* wire FR_fetch = X_cycleCounterForNotes % 3 == 0; */
-    /* always @(posedge CLK) begin */
-    /*     if(FR_fetch && FR_shouldFetchIns) begin */
-    /*         sramAddrReg <= FR_pc; */
-    /*     end */
-    /* end */
-
-
     // -----------------------------[ STAGE:  READ    ]-------------------------------
     wire FR_read = X_cycleCounterForNotes % 4 == 2;
     always @(posedge CLK) begin
         if(FR_read && FR_shouldReadIns) begin
             FR_lastReadIns <= SRAM_D;
-            FR_pc <= FR_pc+1;
 
             if(FR_insIsBpm) begin
                 FR_regBpm <= FR_insBpm;
             end
-
             if(FR_insIsRep1) begin
                 FR_regRepeatHi <= FR_insRepeatHi;
             end
-
             if (FR_insIsRep2) begin
+                if (FR_insRepeatCount == 0) begin
+                    FR_pc <= FR_pc+1;
+                end
                 case(FR_repCounters[FR_insRepeatLevel])
                     0: begin
                         FR_repCounters[FR_insRepeatLevel] <= FR_insRepeatCount;
-                        FR_pc <= FR_nextPc;
+                        FR_pc <= FR_insRepeatCount;
                     end
                     1: begin
                         FR_repCounters[FR_insRepeatLevel] <= 0;
+                        FR_pc <= FR_pc+1;
                     end
                     default: begin
                         FR_repCounters[FR_insRepeatLevel] <= FR_repCounters[FR_insRepeatLevel] - 1;
                         FR_pc <= FR_nextPc;
                     end
                 endcase     
+            end
+            else begin
+                FR_pc <= FR_pc+1;
             end
         end
     end
