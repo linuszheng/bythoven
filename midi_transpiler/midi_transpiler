@@ -1,0 +1,24 @@
+Midi to RISCmaninov Transpiler
+
+Compiles simple Midi files to the RISCmaninov instruction
+set.
+
+Restrictions:
+- Compatible with Midi format 1 files only
+- Cannot play simultaneous notes (this applies to multiple instruments as well)
+__________________________________________________________
+
+Usage:
+
+Requires JDK to be installed
+
+1. cd into midi_traspiler directory using terminal
+2. compile transpiler with "javac MidiToRISCmaninov.java"
+3. run using "java MidiToRISCmaninov [input_file.mid]"
+__________________________________________________________
+
+Create Midi Files using this simple Sequencer:
+https://onlinesequencer.net/#t4
+
+Credit for Midi to CSV from midicsv:
+https://www.fourmilab.ch/webtools/midicsv/
