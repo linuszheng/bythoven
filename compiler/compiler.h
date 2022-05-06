@@ -11,16 +11,16 @@ class Compiler {
 private:
     enum VolumeLevel {
         MUTE = 0,
-        PIANO,
-        MEZZO_FORTE,
-        FORTISSIMO
+        PIANO = 1,
+        MEZZO_FORTE = 2,
+        FORTISSIMO = 3
     };
 
     enum StyleType {
         NOTHING = 0,
-        STACCATO,
-        NORMAL,
-        SUSTAIN
+        STACCATO = 1,
+        NORMAL = 2,
+        SUSTAIN = 3
     };
 
     std::vector<std::string> block_tokens;
