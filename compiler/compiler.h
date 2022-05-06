@@ -72,21 +72,23 @@ private:
     int get_style();
     int get_duration(std::istream &in);
 
+    std::array<std::uint8_t, 2> split_instr(std::uint16_t instr);
+
 public:
     Compiler();
 
     void compile_file(std::string file_name);
-    std::optional<std::vector<std::uint8_t>> process_token(std::istream &in, std::string token);
-    std::vector<std::uint8_t> process_end();
-    std::vector<std::uint8_t> process_bpm(std::istream &in);
-    std::vector<std::uint8_t> process_note(std::istream &in, std::string token);
+    std::vector<std::uint16_t> process_token(std::istream &in, std::string token);
+    std::vector<std::uint16_t> process_end();
+    std::vector<std::uint16_t> process_bpm(std::istream &in);
+    std::vector<std::uint16_t> process_note(std::istream &in, std::string token);
 
     void set_volume(std::string token);
     void set_style(std::istream &in, std::string token);
     void set_repeat_block(std::istream &in);
 
     void read_open_brace(std::istream &in);
-    std::vector<std::uint8_t> process_close_brace();
+    std::vector<std::uint16_t> process_close_brace();
 };
 
 #endif /* COMPILER_H */

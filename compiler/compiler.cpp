@@ -43,11 +43,11 @@ void Compiler::compile_file(std::string file_name) {
         try {
             while (ss >> token) {
                 auto data = process_token(ss, token);
-                if (data) {
-                    for (auto byte : *data) {
-                        output_bytes.push_back(byte);
-                        next_instruction_address++;
-                    }
+                for (auto instr : data) {
+                    auto [low, high] = split_instr(instr);
+                    output_bytes.push_back(low);
+                    output_bytes.push_back(high);
+                    next_instruction_address++;
                 }
             }
         } catch (...) {
@@ -72,7 +72,7 @@ void Compiler::compile_file(std::string file_name) {
     std::cout.copyfmt(old_config);
 }
 
-std::optional<std::vector<std::uint8_t>> Compiler::process_token(std::istream &in, std::string token) {
+std::vector<std::uint16_t> Compiler::process_token(std::istream &in, std::string token) {
     if (token == "p" || token == "mf" || token == "ff") {
         set_volume(token);
         return {};
@@ -93,11 +93,11 @@ std::optional<std::vector<std::uint8_t>> Compiler::process_token(std::istream &i
     }
 }
 
-std::vector<std::uint8_t> Compiler::process_end() {
+std::vector<std::uint16_t> Compiler::process_end() {
     return {0x00, 0x00};
 }
 
-std::vector<std::uint8_t> Compiler::process_bpm(std::istream &in) {
+std::vector<std::uint16_t> Compiler::process_bpm(std::istream &in) {
     int bpm;
     in >> bpm;
 
@@ -172,7 +172,7 @@ int Compiler::get_duration(std::istream &in) {
     return note_idx;
 }
 
-std::vector<std::uint8_t> Compiler::process_note(std::istream &in, std::string token) {
+std::vector<std::uint16_t> Compiler::process_note(std::istream &in, std::string token) {
     int note = get_note(token);
     int octave = get_octave(token, in);
     int volume = get_volume(token);
@@ -188,8 +188,7 @@ std::vector<std::uint8_t> Compiler::process_note(std::istream &in, std::string t
     instr += style << NOTE_STYLE_SHIFT;
     instr += opcode << NOTE_OPCODE_SHIFT;
 
-    uint16_t eight_bits = 1 << 8;
-    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
+    return {instr};
 }
 
 void Compiler::set_volume(std::string token) {
@@ -232,7 +231,6 @@ void Compiler::set_repeat_block(std::istream &in) {
 
     block_tokens.push_back("repeat");
     read_open_brace(in);
-
 }
 
 void Compiler::read_open_brace(std::istream &in) {
@@ -242,7 +240,7 @@ void Compiler::read_open_brace(std::istream &in) {
     if (token != "{") throw 1;
 }
 
-std::vector<std::uint8_t> Compiler::process_close_brace() {
+std::vector<std::uint16_t> Compiler::process_close_brace() {
     if (block_tokens.empty()) throw 1;
 
     std::string token = block_tokens.back();
@@ -279,11 +277,10 @@ std::vector<std::uint8_t> Compiler::process_close_brace() {
     instr_low += addr_low << REPEAT_LOW_ADDR_SHIFT;
     instr_low += REPEAT_LOW_OPCODE << REPEAT_LOW_OPCODE_SHIFT;
 
+    return {instr_high, instr_low};
+}
+
+std::array<std::uint8_t, 2> Compiler::split_instr(std::uint16_t instr) {
     uint16_t eight_bits = 1 << 8;
-    return {
-        static_cast<uint8_t>(instr_high % eight_bits), 
-        static_cast<uint8_t>(instr_high / eight_bits),
-        static_cast<uint8_t>(instr_low % eight_bits),
-        static_cast<uint8_t>(instr_low / eight_bits)
-    };
+    return {static_cast<uint8_t>(instr % eight_bits), static_cast<uint8_t>(instr / eight_bits)};
 }
