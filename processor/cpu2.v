@@ -62,12 +62,6 @@ module cpu2 (
     wire FR_insIsRep1  = (FR_lastReadIns[15:12] == 4'b0010);
     wire FR_insIsRep2  = (FR_lastReadIns[15:12] == 4'b0011);
     wire FR_insIsValid = FR_insIsNote || FR_insIsRep1 || FR_insIsRep2 || FR_insIsBpm || FR_insIsEnd;
-
-    // Repeat - we support 7 levels of nested loops
-    wire [11:0] FR_insRepLocHi12 = FR_lastReadIns[11:0];
-    wire [5:0] FR_insRepLocLo6 = FR_lastReadIns[11:6];
-    wire [5:0] FR_insRepCounter = FR_lastReadIns[5:0];
-    reg [2:0] FR_repCounters [7:0];     // stores: number of repeats left
     
     // Repeat - calculations
     wire [11:0] FR_insRepeatHi = FR_lastReadIns[11:0];
@@ -102,7 +96,7 @@ module cpu2 (
                 case(FR_repCounters[FR_insRepeatLevel])
                     0: begin
                         FR_repCounters[FR_insRepeatLevel] <= FR_insRepeatCount;
-                        FR_pc <= FR_insRepeatCount;
+                        FR_pc <= FR_nextPc;
                     end
                     1: begin
                         FR_repCounters[FR_insRepeatLevel] <= 0;
@@ -112,7 +106,7 @@ module cpu2 (
                         FR_repCounters[FR_insRepeatLevel] <= FR_repCounters[FR_insRepeatLevel] - 1;
                         FR_pc <= FR_nextPc;
                     end
-                endcase     
+                endcase
             end
             else begin
                 FR_pc <= FR_pc+1;
