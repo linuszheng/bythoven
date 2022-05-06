@@ -3,7 +3,6 @@
 
 #include <array>
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,8 +26,10 @@ private:
     VolumeLevel cur_volume;
     StyleType cur_style;
 
-    /* int instruction_address; */
-    /* int repeat_address; */
+    int next_instruction_address;
+    std::vector<int> repeat_address;
+    std::vector<int> repeat_count;
+    int repeat_level;
 
     // Constants for BPM
     constexpr static int MAX_BPM = 1 << 12;
@@ -48,6 +49,22 @@ private:
     constexpr static int NOTE_STYLE_SHIFT = 12;
     constexpr static int NOTE_OPCODE_SHIFT = 15;
 
+    // Constants for repeating
+    constexpr static int MIN_REPEAT_COUNT = 1;
+    constexpr static int MAX_REPEAT_COUNT = 1 << 3;
+
+    constexpr static int MAX_REPEAT_LEVEL = 1 << 3;
+
+    constexpr static int REPEAT_HIGH_OPCODE = 0b0010;
+    constexpr static int REPEAT_HIGH_OPCODE_SHIFT = 12;
+    constexpr static int REPEAT_HIGH_ADDR_SHIFT = 0;
+
+    constexpr static int REPEAT_LOW_OPCODE = 0b0011;
+    constexpr static int REPEAT_LOW_OPCODE_SHIFT = 12;
+    constexpr static int REPEAT_LOW_ADDR_SHIFT = 6;
+    constexpr static int REPEAT_LOW_LEVEL_SHIFT = 3;
+    constexpr static int REPEAT_LOW_COUNT_SHIFT = 0;
+
     // Helper methods
     int get_note(std::string token);
     int get_octave(std::string token, std::istream &in);
@@ -66,9 +83,10 @@ public:
 
     void set_volume(std::string token);
     void set_style(std::istream &in, std::string token);
+    void set_repeat_block(std::istream &in);
 
     void read_open_brace(std::istream &in);
-    void process_close_brace();
+    std::vector<std::uint8_t> process_close_brace();
 };
 
 #endif /* COMPILER_H */

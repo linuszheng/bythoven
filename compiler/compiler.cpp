@@ -28,7 +28,7 @@ const std::array<std::vector<std::string>, 12> Compiler::NOTES = {
     std::vector<std::string>{ "B", "Cb" }
 };
 
-Compiler::Compiler() : cur_volume(MEZZO_FORTE), cur_style(NORMAL) {}
+Compiler::Compiler() : cur_volume(MEZZO_FORTE), cur_style(NORMAL), next_instruction_address(0), repeat_level(0) {}
 
 void Compiler::compile_file(std::string file_name) {
     std::ifstream source(file_name);
@@ -38,6 +38,7 @@ void Compiler::compile_file(std::string file_name) {
     int line_number = 1;
 
     while (std::getline(source, current_line)) {
+        std::cout << current_line << std::endl;
         std::stringstream ss(current_line);
         try {
             while (ss >> token) {
@@ -45,6 +46,7 @@ void Compiler::compile_file(std::string file_name) {
                 if (data) {
                     for (auto byte : *data) {
                         output_bytes.push_back(byte);
+                        next_instruction_address++;
                     }
                 }
             }
@@ -81,9 +83,11 @@ std::optional<std::vector<std::uint8_t>> Compiler::process_token(std::istream &i
     } else if (token == "sus" || token == "stac") {
         set_style(in, token);
         return {};
-    } else if (token == "}") {
-        process_close_brace();
+    } else if (token == "repeat") {
+        set_repeat_block(in);
         return {};
+    } else if (token == "}") {
+        return process_close_brace();
     } else {
         return process_note(in, token);
     }
@@ -214,6 +218,23 @@ void Compiler::set_style(std::istream &in, std::string token) {
     read_open_brace(in);
 }
 
+void Compiler::set_repeat_block(std::istream &in) {
+    int count;
+    in >> count;
+    if (in.fail()) throw 1;
+    if (count < MIN_REPEAT_COUNT || count > MAX_REPEAT_COUNT) throw 1;
+
+    repeat_address.push_back(next_instruction_address);
+    repeat_count.push_back(count);
+
+    repeat_level++;
+    if (repeat_level > MAX_REPEAT_LEVEL) throw 1;
+
+    block_tokens.push_back("repeat");
+    read_open_brace(in);
+
+}
+
 void Compiler::read_open_brace(std::istream &in) {
     std::string token;
     in >> token;
@@ -221,7 +242,7 @@ void Compiler::read_open_brace(std::istream &in) {
     if (token != "{") throw 1;
 }
 
-void Compiler::process_close_brace() {
+std::vector<std::uint8_t> Compiler::process_close_brace() {
     if (block_tokens.empty()) throw 1;
 
     std::string token = block_tokens.back();
@@ -229,5 +250,40 @@ void Compiler::process_close_brace() {
 
     if (token == "sus" || token == "stac") {
         cur_style = NORMAL;
+        return {};
     }
+
+    int address = repeat_address.back();
+    repeat_address.pop_back();
+
+    int count = repeat_count.back();
+    repeat_count.pop_back();
+
+    repeat_level--;
+
+    // is repeat block
+    int six_bits = 1 << 6;
+    int addr_low = address % six_bits;   // six lowest bits in the lower part
+    int addr_high = address / six_bits;  // rest of the bits in upper part
+
+    std::cout << address << std::endl;
+    std::cout << addr_low << ' ' << addr_high << std::endl;
+
+    std::uint16_t instr_high = 0;
+    instr_high += addr_high << REPEAT_HIGH_ADDR_SHIFT;
+    instr_high += REPEAT_HIGH_OPCODE << REPEAT_HIGH_OPCODE_SHIFT;
+
+    std::uint16_t instr_low = 0;
+    instr_low += repeat_level << REPEAT_LOW_LEVEL_SHIFT;
+    instr_low += count << REPEAT_LOW_COUNT_SHIFT;
+    instr_low += addr_low << REPEAT_LOW_ADDR_SHIFT;
+    instr_low += REPEAT_LOW_OPCODE << REPEAT_LOW_OPCODE_SHIFT;
+
+    uint16_t eight_bits = 1 << 8;
+    return {
+        static_cast<uint8_t>(instr_high % eight_bits), 
+        static_cast<uint8_t>(instr_high / eight_bits),
+        static_cast<uint8_t>(instr_low % eight_bits),
+        static_cast<uint8_t>(instr_low / eight_bits)
+    };
 }

@@ -7,11 +7,11 @@ CXX_O_FILES=${addprefix $B/,${subst .cpp,.o,${CXX_FILES}}}
 
 all: $B/bythoven
 
-$B/bythoven: ${CXX_O_FILES}
+$B/bythoven: ${CXX_O_FILES} Makefile
 	@mkdir -p $B
 	${CXX} ${CXXFLAGS} ${CXX_O_FILES} -o $B/bythoven
 
-${CXX_O_FILES}: $B/%.o: %.cpp
+${CXX_O_FILES}: $B/%.o: %.cpp Makefile
 	@mkdir -p $B
 	${CXX} ${CXXFLAGS} -c $*.cpp -o $@
 
