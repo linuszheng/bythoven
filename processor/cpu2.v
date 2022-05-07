@@ -6,7 +6,8 @@
 `define _PLACEHOLDER_INS 16'b1000000000000001
 `define _PAUSE_NORMAL_LENGTH 2000000
 `define _PAUSE_STACCATO_LENGTH 10000000
-`define _DEFAULT_REPEAT_HI 000000000000
+`define _STARTING_PC 18'b000000000000000000
+`define _DEFAULT_REPEAT_HI 12'b000000000000
 
 /*
 
@@ -50,7 +51,7 @@ module cpu2 (
     assign SRAM_A  = FR_pc;
 
     // FW = Fetch + Wait (Multicycle)
-    reg [17:0] FR_pc = 18'hff00;
+    reg [17:0] FR_pc = `_STARTING_PC;
     reg [15:0] FR_lastReadIns = `_PLACEHOLDER_INS;
     wire FR_shouldFetchIns = FR_insIsValid && !FR_insIsEnd && (!FR_insIsNote || X_cycleCounterForNotes == 0);
     wire FR_shouldReadIns  = FR_insIsValid && !FR_insIsEnd && (!FR_insIsNote || X_cycleCounterForNotes == 2);
@@ -65,7 +66,7 @@ module cpu2 (
     
     // Repeat - calculations
     wire [11:0] FR_insRepeatHi = FR_lastReadIns[11:0];
-    wire [11:6] FR_insRepeatLo = FR_lastReadIns[11:6];
+    wire [5:0] FR_insRepeatLo = FR_lastReadIns[11:6];
     wire [2:0] FR_insRepeatCount = FR_lastReadIns[5:3];
     wire [2:0] FR_insRepeatLevel = FR_lastReadIns[2:0];
     wire [17:0] FR_nextPc = {FR_regRepeatHi, FR_insRepeatLo};
