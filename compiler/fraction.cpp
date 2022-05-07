@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "fraction.h"
+#include "parse_exception.h"
 
 Fraction::Fraction() : Fraction(0, 1) {}
 
@@ -48,9 +49,8 @@ int get_fraction_index(Fraction total) {
     auto it = std::find_if(NOTE_DENOMINATORS.begin(), NOTE_DENOMINATORS.end(),
                            [total](int denom) { return total.get_denominator() == denom; });
 
-    if (it == NOTE_DENOMINATORS.end()) {
-        // TODO: make a proper exception
-        throw 1;
+    if (total.get_numerator() != 1 || it == NOTE_DENOMINATORS.end()) {
+        throw ParseException("invalid note length");
     }
 
     return static_cast<int>(it - NOTE_DENOMINATORS.begin());

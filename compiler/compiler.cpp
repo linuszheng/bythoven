@@ -1,6 +1,7 @@
 #include <array>
 #include <algorithm>
 #include <cstdint>
+#include <exception>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -12,6 +13,7 @@
 
 #include "compiler.h"
 #include "fraction.h"
+#include "parse_exception.h"
 
 const std::array<std::vector<std::string>, 12> Compiler::NOTES = {
     std::vector<std::string>{ "B#", "C" },
@@ -49,9 +51,10 @@ void Compiler::compile_file(std::string file_name) {
                     add_instr(instr);
                 }
             }
-        } catch (...) {
+        } catch (ParseException &e) {
             // TODO: have a specific error for parsing
             std::cerr << "error on line " << line_number << std::endl;
+            std::cerr << e.what() << std::endl;
             return;
         }
 
@@ -100,8 +103,8 @@ std::vector<std::uint16_t> Compiler::process_bpm(std::istream &in) {
     in >> bpm;
 
     // TODO: add a specific error
-    if (in.fail()) throw 1;
-    if (bpm < 0 || bpm >= MAX_BPM) throw 1;
+    if (in.fail()) throw ParseException("bpm needs to be an integer");
+    if (bpm < 0 || bpm >= MAX_BPM) throw ParseException("bpm needs to be positive and less than or equal to " + std::to_string(MAX_BPM));
 
     std::uint16_t instr = 0;
     instr += bpm << BPM_SHIFT;
@@ -124,9 +127,7 @@ int Compiler::get_note(std::string token) {
 
     auto it = std::find_if(NOTES.begin(), NOTES.end(), check);
 
-    if (it == NOTES.end()) {
-        throw 0;
-    }
+    if (it == NOTES.end()) throw ParseException("not a valid note");
 
     return it - NOTES.begin();
 }
@@ -140,9 +141,10 @@ int Compiler::get_octave(std::string token, std::istream &in) {
     int octave;
     in >> octave;
 
-    // TODO: use proper exceptions
-    if (in.fail()) throw 1;
-    if (octave < MIN_OCTAVE || octave > MAX_OCTAVE) throw 1;
+    if (in.fail()) throw ParseException("octave needs to be an integer");
+    if (octave < MIN_OCTAVE || octave > MAX_OCTAVE) {
+        throw ParseException("octave needs to be >= " + std::to_string(MIN_OCTAVE) + " and <= " + std::to_string(MAX_OCTAVE));
+    }
 
     // normalize to 0 for storage
     return octave - MIN_OCTAVE;
@@ -196,8 +198,7 @@ void Compiler::set_volume(std::string token) {
     } else if (token == "ff") {
         cur_volume = FORTISSIMO;
     } else {
-        // TODO: add actual error
-        throw 1;
+        throw ParseException("volume must be one of 'p', 'mf', or 'ff'");
     }
 }
 
@@ -207,7 +208,7 @@ void Compiler::set_style(std::istream &in, std::string token) {
     } else if (token == "stac") {
         cur_style = STACCATO;
     } else {
-        throw 1;
+        throw ParseException("style must be one of 'sus' or 'stac'");
     }
 
     block_tokens.push_back(token);
@@ -217,14 +218,16 @@ void Compiler::set_style(std::istream &in, std::string token) {
 void Compiler::set_repeat_block(std::istream &in) {
     int count;
     in >> count;
-    if (in.fail()) throw 1;
-    if (count < MIN_REPEAT_COUNT || count > MAX_REPEAT_COUNT) throw 1;
+    if (in.fail()) ParseException("count needs to be an integer");
+    if (count < MIN_REPEAT_COUNT || count > MAX_REPEAT_COUNT) {
+        throw ParseException("count must be between " + std::to_string(MIN_REPEAT_COUNT) + " and " + std::to_string(MAX_REPEAT_COUNT));
+    }
 
     repeat_address.push_back(next_instruction_address);
     repeat_count.push_back(count);
 
     repeat_level++;
-    if (repeat_level > MAX_REPEAT_LEVEL) throw 1;
+    if (repeat_level > MAX_REPEAT_LEVEL) throw ParseException("repeats cannot be nested more than 8 times");
 
     block_tokens.push_back("repeat");
     read_open_brace(in);
@@ -234,11 +237,11 @@ void Compiler::read_open_brace(std::istream &in) {
     std::string token;
     in >> token;
 
-    if (token != "{") throw 1;
+    if (token != "{") throw ParseException("open brace is required");
 }
 
 std::vector<std::uint16_t> Compiler::process_close_brace() {
-    if (block_tokens.empty()) throw 1;
+    if (block_tokens.empty()) throw ParseException("closing brace does not have matching open brace");
 
     std::string token = block_tokens.back();
     block_tokens.pop_back();
